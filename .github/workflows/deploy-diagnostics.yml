@@ -1,0 +1,38 @@
+name: deploy-diagnostics
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Full release SHA to inspect (read-only)
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect transfer processes and network counters
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_PATH" =~ ^/[a-zA-Z0-9/_-]+$ ]]
+          [[ "$TAG" =~ ^[0-9a-f]{40}$ ]]
+          install -m 600 /dev/null "$RUNNER_TEMP/key"
+          trap 'rm -f "$RUNNER_TEMP/key" "$RUNNER_TEMP/known_hosts"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$RUNNER_TEMP/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+          {
+            printf 'export DEPLOY_PATH=%q TAG=%q\n' "$DEPLOY_PATH" "$TAG"
+            cat deploy/diagnostics/inspect-transfer.sh
+          } | timeout 90 ssh -i "$RUNNER_TEMP/key" -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" -o ConnectTimeout=15 \
+            -o ServerAliveInterval=15 -o ServerAliveCountMax=4 "$DEPLOY_USER@$HOST" bash -s

@@ -15,7 +15,7 @@ for _ in $(seq 1 60); do
 done
 [ "$ready" = true ] || { cat "$log"; exit 1; }
 if [ "$module" = xc-api ]; then
-  curl -fsS http://127.0.0.1:18099/api/v1/stores | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["code"]==0 and len(d["data"])==3'
+  curl -fsS http://127.0.0.1:18099/api/v1/stores | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["code"]==0 and len(d["data"])==3; assert all(not any(h in str(v) for h in ("127.0.0.1", "localhost")) for row in d["data"] for v in row.values()), "Localhost store media leaked into production"'
   curl -fsS http://127.0.0.1:18099/api/v1/products | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["code"]==0 and d["data"]["total"]==0, "Demo data leaked into production profile"'
 else
   code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18099/api/admin/products)

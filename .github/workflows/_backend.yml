@@ -84,7 +84,7 @@ jobs:
     needs: build
     if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
       contents: read
       packages: read
@@ -117,7 +117,13 @@ jobs:
           tar -czf "$RUNNER_TEMP/deploy.tgz" deploy/docker-compose.yml deploy/scripts
           ssh "${opts[@]}" "$DEPLOY_USER@$HOST" "mkdir -p '$RELEASE_DIR'"
           scp "${opts[@]}" "$RUNNER_TEMP/deploy.tgz" "$DEPLOY_USER@$HOST:$RELEASE_DIR/deploy.tgz"
-          scp "${opts[@]}" "$RUNNER_TEMP/deployment-image/image.tar.gz" "$DEPLOY_USER@$HOST:$RELEASE_DIR/image.tar.gz"
+          printf -v ssh_command '%q ' ssh "${opts[@]}"
+          for attempt in 1 2 3; do
+            if timeout 480 rsync --partial --append-verify --checksum --timeout=120 -e "$ssh_command" "$RUNNER_TEMP/deployment-image/image.tar.gz" "$DEPLOY_USER@$HOST:$RELEASE_DIR/image.tar.gz"; then
+              break
+            fi
+            [ "$attempt" -lt 3 ] || exit 1
+          done
           ssh "${opts[@]}" "$DEPLOY_USER@$HOST" "tar -xzf '$RELEASE_DIR/deploy.tgz' -C '$RELEASE_DIR'"
           {
             for name in DEPLOY_PATH SERVICE TAG_VAR TAG RELEASE_DIR; do

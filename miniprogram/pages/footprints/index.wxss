@@ -1,0 +1,156 @@
+.page {
+  min-height: 100vh;
+  padding-bottom: 24rpx;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding-left: 24rpx;
+  padding-right: 32rpx;
+  padding-bottom: 20rpx;
+}
+
+.head__back {
+  flex: none;
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  color: var(--xc-ink);
+  font-size: 42rpx;
+  line-height: 54rpx;
+  text-align: center;
+}
+
+.head__title {
+  flex: 1;
+  font-size: 38rpx;
+  letter-spacing: 3rpx;
+}
+
+.head__action {
+  flex: none;
+  font-size: 22rpx;
+  letter-spacing: 2rpx;
+  color: var(--xc-muted);
+}
+
+.loading {
+  padding: 8rpx 32rpx;
+}
+
+.loading__row {
+  height: 150rpx;
+  margin-bottom: 18rpx;
+  border-radius: 12rpx;
+}
+
+.days {
+  padding: 6rpx 32rpx 0;
+}
+
+.day {
+  margin-bottom: 26rpx;
+}
+
+.day__label {
+  display: block;
+  padding: 10rpx 0 6rpx;
+  font-size: 22rpx;
+  letter-spacing: 3rpx;
+  color: var(--xc-muted);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--xc-line);
+}
+
+.row__img {
+  flex: none;
+  width: 104rpx;
+  height: 138rpx;
+  border-radius: 8rpx;
+  background: #e7e0d5;
+}
+
+.row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.row__title {
+  font-size: 26rpx;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.row__meta {
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: var(--xc-muted);
+}
+
+.row__price {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--xc-brand);
+}
+
+.row__time {
+  flex: none;
+  align-self: flex-start;
+  padding-top: 4rpx;
+  font-size: 19rpx;
+  color: var(--xc-muted);
+}
+
+.notice {
+  padding: 8rpx 2rpx 40rpx;
+  font-size: 20rpx;
+  line-height: 1.7;
+  color: var(--xc-muted);
+}
+
+.guest,
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 170rpx 48rpx 0;
+  text-align: center;
+}
+
+.guest__title,
+.empty__title {
+  font-size: 34rpx;
+  letter-spacing: 4rpx;
+}
+
+.guest__hint,
+.empty__hint {
+  margin-top: 16rpx;
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: var(--xc-muted);
+}
+
+.guest__btn,
+.empty__btn {
+  margin-top: 44rpx;
+  padding: 20rpx 64rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid var(--xc-ink);
+  font-size: 24rpx;
+  letter-spacing: 2rpx;
+}

@@ -1,0 +1,65 @@
+<view class="page">
+  <view class="head" style="padding-top: {{statusBarHeight + 10}}px;">
+    <view class="head__back" bindtap="goBack">‹</view>
+    <text class="head__title serif">我的预约</text>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">
+    <view class="skeleton loading__row" wx:for="{{3}}" wx:key="*this"></view>
+  </view>
+
+  <view class="guest" wx:if="{{!loading && !loggedIn}}">
+    <text class="guest__title serif">登录后查看预约</text>
+    <text class="guest__hint">预约记录按账号保存，到店报手机号即可</text>
+    <view class="guest__btn" bindtap="login">{{busy ? '登录中…' : '微信一键登录'}}</view>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && loggedIn && !items.length}}">
+    <text class="empty__title serif">还没有预约</text>
+    <text class="empty__hint">在试穿清单里选好单品，预约到店试穿</text>
+    <view class="empty__btn" bindtap="goBook">去清单看看</view>
+  </view>
+
+  <view class="list" wx:if="{{!loading && loggedIn && items.length}}">
+    <view class="card" wx:for="{{items}}" wx:key="id">
+      <view class="card__head">
+        <view class="card__store-block">
+          <text class="card__store serif">{{item.storeShort}}</text>
+          <text class="card__visit">{{item.visitText}}</text>
+        </view>
+        <text class="chip chip--{{item.statusClass}}">{{item.statusText}}</text>
+      </view>
+
+      <scroll-view scroll-x class="card__items" wx:if="{{item.items.length}}">
+        <view
+          class="mini"
+          wx:for="{{item.items}}"
+          wx:for-item="sku"
+          wx:key="skuId"
+          data-pid="{{sku.productId}}"
+          data-store="{{item.storeId}}"
+          bindtap="openProduct"
+        >
+          <image class="mini__img" src="{{sku.coverUrl}}" mode="aspectFill" lazy-load />
+          <text class="mini__name">{{sku.title}}</text>
+          <text class="mini__spec">{{sku.color}} · {{sku.size}}</text>
+          <text class="mini__price">¥ {{sku.priceText}}</text>
+        </view>
+      </scroll-view>
+
+      <view class="card__meta">
+        <text>{{item.phone}}{{item.contactName ? ' · ' + item.contactName : ''}}</text>
+        <text class="card__remark" wx:if="{{item.remark}}">备注：{{item.remark}}</text>
+      </view>
+
+      <view class="card__foot">
+        <text class="card__created">{{item.createdText}} 提交 · {{item.itemCount}} 件</text>
+        <view class="card__cancel" wx:if="{{item.canCancel}}" data-id="{{item.id}}" bindtap="cancel">取消预约</view>
+      </view>
+    </view>
+    <view class="more" wx:if="{{hasMore}}" bindtap="loadMore">{{loadingMore ? '加载中…' : '加载更多'}}</view>
+    <view class="more" wx:else>共 {{total}} 条预约</view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

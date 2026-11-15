@@ -1,0 +1,28 @@
+# Java
+xc/**/target/
+*.class
+*.log
+
+# Node
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Secrets
+.env
+.env.*
+!.env.example
+application-local.yml
+
+# WeChat DevTools
+project.private.config.json
+miniprogram/miniprogram_npm/
+
+# 后台上传图片（本地磁盘，生产走对象存储）
+uploads/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store

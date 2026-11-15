@@ -1,0 +1,57 @@
+page {
+  --xc-ink: #1c1a17;
+  --xc-muted: #8a8378;
+  --xc-sub: #8a8378;
+  --xc-line: #e7e1d6;
+  --xc-bg: #f6f3ee;
+  --xc-card: #ffffff;
+  --xc-brand: #7a2e2a;
+  --xc-tabbar-h: 96rpx;
+  background: var(--xc-bg);
+  color: var(--xc-ink);
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+}
+
+.page {
+  min-height: 100vh;
+  padding-bottom: calc(var(--xc-tabbar-h) + env(safe-area-inset-bottom));
+}
+
+.page__title {
+  display: block;
+  padding: 240rpx 48rpx 16rpx;
+  font-size: 44rpx;
+  letter-spacing: 4rpx;
+}
+
+.page__hint {
+  display: block;
+  padding: 0 48rpx;
+  color: var(--xc-muted);
+  font-size: 26rpx;
+}
+
+.serif {
+  font-family: "Songti SC", "STSong", serif;
+}
+
+.price {
+  color: var(--xc-brand);
+  font-weight: 600;
+}
+
+.safe-bottom {
+  height: calc(var(--xc-tabbar-h) + env(safe-area-inset-bottom));
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #ece6dc 25%, #f4efe6 37%, #ece6dc 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 10rpx;
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}

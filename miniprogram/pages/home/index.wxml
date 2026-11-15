@@ -1,0 +1,88 @@
+<view class="home">
+  <view class="hero" wx:if="{{!loading && theme}}">
+    <image class="hero__img" src="{{banner}}" mode="aspectFill" />
+    <view class="hero__shade"></view>
+    <view class="hero__top" style="padding-top: {{statusBarHeight + 6}}px;">
+      <view class="brand serif">夏晨衣舍<text class="brand__sub">XIACHEN YISHE</text></view>
+    </view>
+    <view class="hero__copy">
+      <text class="hero__title serif">{{theme.name}}</text>
+      <text class="hero__sub">{{theme.copyText}}</text>
+      <view class="hero__actions" bindtap="toggleCollection">
+        <view class="hero__enter">
+          <text>{{expanded ? '收起内容' : '进入系列'}}</text>
+        </view>
+        <text class="hero__arrow">{{expanded ? '↑' : '↓'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="skeleton-page" wx:if="{{loading}}">
+    <view class="skeleton skeleton-page__hero"></view>
+  </view>
+
+  <view class="content" id="collection" wx:if="{{!loading && expanded}}">
+    <view class="storebar">
+      <text class="storebar__label serif">当前门店</text>
+      <text class="storebar__hint">切换门店查看本店库存</text>
+    </view>
+    <store-switcher stores="{{stores}}" value="{{storeId}}" bind:change="onStoreChange" />
+
+    <block wx:for="{{modules}}" wx:key="type">
+      <block wx:if="{{item.type === 'RECOMMEND' || item.type === 'COLLECTION'}}">
+        <view class="section">
+          <view class="section__head">
+            <text class="section__title serif">{{item.title}}</text>
+            <text class="section__count">{{item.products.length}} 款</text>
+          </view>
+          <text class="section__sub" wx:if="{{item.subtitle}}">{{item.subtitle}}</text>
+          <view class="grid">
+            <product-card
+              wx:for="{{item.products}}"
+              wx:for-item="product"
+              wx:key="id"
+              item="{{product}}"
+              cardWidth="{{333}}"
+            />
+          </view>
+        </view>
+      </block>
+
+      <block wx:elif="{{item.type === 'LOOK'}}">
+        <view class="section">
+          <view class="section__head">
+            <text class="section__title serif">{{item.title}}</text>
+            <text class="section__count">{{item.looks.length}} 套</text>
+          </view>
+          <text class="section__sub" wx:if="{{item.subtitle}}">{{item.subtitle}}</text>
+          <scroll-view class="looks" scroll-x enhanced show-scrollbar="{{false}}">
+            <view class="looks__inner">
+              <view class="look" wx:for="{{item.looks}}" wx:for-item="look" wx:key="id">
+                <image class="look__img" src="{{look.coverUrl}}" mode="aspectFill" lazy-load />
+                <text class="look__title">{{look.title}}</text>
+                <text class="look__desc">{{look.description}}</text>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
+      </block>
+
+      <block wx:elif="{{item.type === 'STORE' && item.store}}">
+        <view class="section">
+          <view class="store">
+            <image class="store__cover" src="{{item.store.coverUrl}}" mode="aspectFill" />
+            <view class="store__body">
+              <text class="store__name">{{item.store.name}}</text>
+              <text class="store__line">{{item.store.address}}</text>
+              <text class="store__line">营业 {{item.store.openTime}} - {{item.store.closeTime}}</text>
+            </view>
+            <text class="store__tag">十二年老店</text>
+          </view>
+        </view>
+      </block>
+    </block>
+
+    <view class="footer serif">夏 晨 衣 舍 · 深 圳</view>
+    <view class="safe-bottom"></view>
+  </view>
+</view>

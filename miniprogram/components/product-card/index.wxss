@@ -1,0 +1,60 @@
+.card {
+  overflow: hidden;
+}
+
+.card__media {
+  position: relative;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #e7e0d5;
+}
+
+.card__img {
+  width: 100%;
+  display: block;
+}
+
+.card__badge {
+  position: absolute;
+  left: 12rpx;
+  top: 12rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  color: var(--xc-brand);
+  font-size: 18rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+.card__meta {
+  padding-top: 14rpx;
+}
+
+.card__name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 24rpx;
+  line-height: 1.45;
+  color: var(--xc-ink);
+}
+
+.card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 8rpx;
+}
+
+.card__price {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--xc-brand);
+}
+
+.card__like {
+  font-size: 20rpx;
+  color: var(--xc-muted);
+}

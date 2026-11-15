@@ -1,0 +1,11 @@
+<scroll-view class="switcher switcher--{{theme}}" scroll-x enhanced show-scrollbar="{{false}}">
+  <view class="switcher__inner">
+    <view
+      wx:for="{{stores}}"
+      wx:key="id"
+      class="pill {{item.id === value ? 'is-active' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onSelect"
+    >{{item.shortName || item.name}}</view>
+  </view>
+</scroll-view>

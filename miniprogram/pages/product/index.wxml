@@ -1,0 +1,104 @@
+<view class="loading" wx:if="{{loading}}">
+  <view class="skeleton loading__img"></view>
+  <view class="loading__body">
+    <view class="skeleton loading__line" style="width: 40%;"></view>
+    <view class="skeleton loading__line" style="width: 70%;"></view>
+    <view class="skeleton loading__line" style="width: 55%;"></view>
+  </view>
+</view>
+
+<view class="page" wx:if="{{!loading && detail}}">
+  <view class="gallery">
+    <swiper class="gallery__swiper" circular bindchange="onSwiperChange">
+      <swiper-item wx:for="{{detail.images}}" wx:key="url">
+        <image class="gallery__img" src="{{item.url}}" mode="aspectFill" />
+      </swiper-item>
+    </swiper>
+    <view class="gallery__count" wx:if="{{detail.images.length > 1}}">{{currentIndex + 1}} / {{detail.images.length}}</view>
+  </view>
+
+  <view class="nav" style="padding-top: {{statusBarHeight + 4}}px;">
+    <view class="nav__back" bindtap="goBack">‹</view>
+  </view>
+
+  <view class="body">
+    <view class="price-row">
+      <text class="price price--main serif">¥ {{priceText}}</text>
+      <text class="price--origin" wx:if="{{originText}}">¥ {{originText}}</text>
+      <view class="price__likes {{liked ? 'is-on' : ''}}" bindtap="onLikeTap">
+        <text>{{liked ? '♥' : '♡'}}</text>
+        <text> {{detail.likeCount}}</text>
+      </view>
+    </view>
+    <text class="title serif">{{detail.title}}</text>
+    <text class="subtitle" wx:if="{{detail.subtitle}}">{{detail.subtitle}}</text>
+
+    <view class="block">
+      <text class="block__label">颜色</text>
+      <view class="chips">
+        <view
+          wx:for="{{colors}}"
+          wx:key="*this"
+          class="chip {{color === item ? 'is-active' : ''}}"
+          data-value="{{item}}"
+          bindtap="onColorTap"
+        >{{item}}</view>
+      </view>
+    </view>
+
+    <view class="block">
+      <text class="block__label">尺码</text>
+      <view class="chips">
+        <view
+          wx:for="{{sizes}}"
+          wx:key="*this"
+          class="chip {{size === item ? 'is-active' : ''}}"
+          data-value="{{item}}"
+          bindtap="onSizeTap"
+        >{{item}}</view>
+      </view>
+    </view>
+
+    <view class="stock" wx:if="{{sku}}">
+      <text wx:if="{{sku.stockStatus === 'OUT'}}" class="stock__text stock__text--out">本店该规格售罄</text>
+      <text wx:elif="{{sku.stockStatus === 'LOW'}}" class="stock__text stock__text--low">本店仅剩 {{sku.stockQuantity}} 件</text>
+      <text wx:else class="stock__text">本店有货 · {{currentStoreName}}</text>
+    </view>
+
+    <view class="stores">
+      <view class="stores__head">
+        <text class="stores__title serif">三店库存</text>
+        <text class="stores__hint">手工维护 · 实时同步</text>
+      </view>
+      <view
+        wx:for="{{detail.stores}}"
+        wx:key="storeId"
+        class="store-item {{item.storeId === currentStoreId ? 'is-current' : ''}}"
+      >
+        <view class="store-item__main">
+          <text class="store-item__name">{{item.storeName}}</text>
+          <text class="store-item__addr">{{item.address}}</text>
+        </view>
+        <view class="store-item__qty">
+          <text class="store-item__num {{item.quantity === 0 ? 'is-zero' : ''}}">{{item.quantity}}</text>
+          <text class="store-item__unit">件</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="desc">
+      <text class="desc__label">商品说明</text>
+      <text class="desc__text">{{detail.description}}</text>
+      <text class="desc__meta">{{detail.category}} · {{detail.material}} · {{detail.season}}</text>
+    </view>
+  </view>
+
+  <view class="actions">
+    <view class="actions__icon {{favorited ? 'is-on' : ''}}" bindtap="onFavoriteTap">
+      <text class="actions__glyph">{{favorited ? '♥' : '♡'}}</text>
+      <text class="actions__label">{{favorited ? '已收藏' : '收藏'}}</text>
+    </view>
+    <view class="actions__main {{inCart ? 'is-in' : ''}}" bindtap="onTryonTap">{{inCart ? '已在试穿清单' : '加入试穿清单'}}</view>
+    <view class="actions__sub" bindtap="onBookTap">预约到店</view>
+  </view>
+</view>

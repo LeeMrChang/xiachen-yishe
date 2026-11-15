@@ -1,0 +1,31 @@
+name: xc-admin
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'xc/xc-admin/**'
+      - 'xc/xc-common/**'
+      - 'xc/xc-domain/**'
+      - 'xc/pom.xml'
+      - 'xc/Dockerfile'
+      - '.github/workflows/_backend.yml'
+      - '.github/workflows/xc-admin.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: xc-admin-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/_backend.yml
+    with:
+      module: xc-admin
+      image: xc-admin
+      service: xc-admin
+      tag_var: XC_ADMIN_TAG
+    secrets: inherit

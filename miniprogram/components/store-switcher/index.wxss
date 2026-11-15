@@ -1,0 +1,39 @@
+.switcher {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.switcher__inner {
+  display: inline-flex;
+  gap: 16rpx;
+  padding: 0 32rpx;
+}
+
+.pill {
+  flex: none;
+  padding: 12rpx 28rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid var(--xc-line);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--xc-muted);
+  font-size: 24rpx;
+  letter-spacing: 1rpx;
+}
+
+.pill.is-active {
+  background: var(--xc-ink);
+  border-color: var(--xc-ink);
+  color: #f6f3ee;
+}
+
+.switcher--dark .pill {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.switcher--dark .pill.is-active {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: var(--xc-ink);
+}

@@ -1,0 +1,13 @@
+${AnsiColor.BRIGHT_MAGENTA}${AnsiStyle.BOLD}
+ █   █ █████ █████ █████ █   █ █████ █   █
+  █ █    █   █   █ █     █   █ █     ██  █
+   █     █   █████ █     █████ ████  █ █ █
+  █ █    █   █   █ █     █   █ █     █  ██
+ █   █ █████ █   █ █████ █   █ █████ █   █
+${AnsiStyle.NORMAL}${AnsiColor.BRIGHT_CYAN}
+          夏  晨  衣  舍   ·   XIACHEN YISHE
+${AnsiColor.BRIGHT_YELLOW}
+        Shenzhen · Womenswear · Since 2013
+${AnsiColor.BRIGHT_BLACK}
+  ─────────────────────────────────────────────────────────
+${AnsiColor.DEFAULT}

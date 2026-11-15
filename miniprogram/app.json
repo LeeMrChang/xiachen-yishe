@@ -1,0 +1,32 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/new-arrivals/index",
+    "pages/tryon-list/index",
+    "pages/mine/index",
+    "pages/product/index",
+    "pages/footprints/index",
+    "pages/appointments/index"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "backgroundColor": "#F6F3EE",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#8A8378",
+    "selectedColor": "#1C1A17",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/home/index", "text": "首页" },
+      { "pagePath": "pages/new-arrivals/index", "text": "上新" },
+      { "pagePath": "pages/tryon-list/index", "text": "清单" },
+      { "pagePath": "pages/mine/index", "text": "我的" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

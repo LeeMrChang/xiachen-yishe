@@ -1,0 +1,10 @@
+{
+  "usingComponents": {
+    "product-card": "/components/product-card/index",
+    "store-switcher": "/components/store-switcher/index"
+  },
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#F6F3EE",
+  "backgroundTextStyle": "dark",
+  "onReachBottomDistance": 120
+}

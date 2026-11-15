@@ -1,0 +1,38 @@
+name: miniprogram
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'miniprogram/**'
+      - '.github/workflows/miniprogram.yml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: miniprogram
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Syntax check
+        run: |
+          find . -name '*.js' -not -path './node_modules/*' -not -path './miniprogram_npm/*' -print0 \
+            | xargs -0 -n1 node --check
+
+      - name: JSON check
+        run: |
+          find . -name '*.json' -not -path './node_modules/*' -not -path './miniprogram_npm/*' -print0 \
+            | xargs -0 -n1 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))'
+
+      - name: Required config
+        run: |
+          test -f app.json
+          test -f project.config.json
+          test -f sitemap.json

@@ -1,0 +1,13 @@
+<view class="card" bindtap="onTap">
+  <view class="card__media">
+    <image class="card__img" style="height: {{imgHeight}}rpx;" src="{{item.coverUrl}}" mode="aspectFill" lazy-load />
+    <view wx:if="{{badge}}" class="card__badge">{{badge}}</view>
+  </view>
+  <view class="card__meta">
+    <text class="card__name">{{item.title}}</text>
+    <view class="card__row">
+      <text class="card__price">¥ {{priceText}}</text>
+      <text class="card__like">♡ {{item.likeCount}}</text>
+    </view>
+  </view>
+</view>

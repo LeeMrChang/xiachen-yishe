@@ -1,0 +1,48 @@
+<view class="page">
+  <view class="head" style="padding-top: {{statusBarHeight + 10}}px;">
+    <view class="head__back" bindtap="goBack">‹</view>
+    <text class="head__title serif">浏览足迹</text>
+    <text class="head__action" wx:if="{{total}}" bindtap="clearAll">清空</text>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">
+    <view class="skeleton loading__row" wx:for="{{4}}" wx:key="*this"></view>
+  </view>
+
+  <view class="guest" wx:if="{{!loading && !loggedIn}}">
+    <text class="guest__title serif">登录后才有足迹</text>
+    <text class="guest__hint">足迹只在你自己的账号里保留 30 天</text>
+    <view class="guest__btn" bindtap="login">{{busy ? '登录中…' : '微信一键登录'}}</view>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && loggedIn && !groups.length}}">
+    <text class="empty__title serif">还没有浏览记录</text>
+    <text class="empty__hint">看过的款式会按日期留在这里</text>
+    <view class="empty__btn" bindtap="goHome">去逛逛</view>
+  </view>
+
+  <view class="days" wx:if="{{!loading && loggedIn && groups.length}}">
+    <view class="day" wx:for="{{groups}}" wx:key="key" wx:for-item="group" wx:for-index="gi">
+      <text class="day__label">{{group.label}}</text>
+      <view
+        class="row"
+        wx:for="{{group.items}}"
+        wx:key="key"
+        data-g="{{gi}}"
+        data-i="{{index}}"
+        bindtap="openItem"
+      >
+        <image class="row__img" src="{{item.coverUrl}}" mode="aspectFill" lazy-load />
+        <view class="row__main">
+          <text class="row__title">{{item.title}}</text>
+          <text class="row__meta">{{item.storeShort}}{{item.stockLabel ? ' · ' + item.stockLabel : ''}}</text>
+          <text class="row__price" wx:if="{{item.priceText}}">¥ {{item.priceText}}</text>
+        </view>
+        <text class="row__time">{{item.timeText}}</text>
+      </view>
+    </view>
+    <view class="notice">足迹只在你自己的账号里保留 30 天。</view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

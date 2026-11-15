@@ -36,7 +36,7 @@ main 分支按路径触发 GitHub Actions：
 Variable：`DEPLOY_ENABLED`。
 Secrets：`DEPLOY_SSH_KEY`、`DEPLOY_KNOWN_HOSTS`、`DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_PATH`、`DEPLOY_WEB_ROOT`。
 
-镜像由 Actions 推送 GHCR，同时打包为保留一天的部署制品，通过 SSH 传到服务器后加载；服务器无需保存 GHCR 凭据，也不依赖跨境拉取镜像。SSH 校验已核对的主机密钥，不跳过主机认证。
+镜像由 Actions 推送 GHCR，同时打包为保留一天的部署制品，通过 SSH 传到服务器后加载；服务器无需保存 GHCR 凭据，也不依赖跨境拉取镜像。服务器保留每个服务最近一份镜像归档，后续通过 rsync 仅传输差异数据，支持中断后续传。SSH 校验已核对的主机密钥，不跳过主机认证。
 
 服务器配置位于 `/home/ubuntu/xiachen-yishe/deploy/.env`，权限 600，模板见 `deploy/.env.example`。
 部署脚本会同步 Compose，并在健康检查成功后记录镜像 SHA。启动失败会尝试恢复上个容器镜像；首次发布失败则停止失败容器。**数据库迁移不自动回滚**，发布破坏性迁移前应备份数据库。

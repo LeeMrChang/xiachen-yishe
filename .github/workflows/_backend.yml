@@ -117,9 +117,11 @@ jobs:
           tar -czf "$RUNNER_TEMP/deploy.tgz" deploy/docker-compose.yml deploy/scripts
           ssh "${opts[@]}" "$DEPLOY_USER@$HOST" "mkdir -p '$RELEASE_DIR'"
           scp "${opts[@]}" "$RUNNER_TEMP/deploy.tgz" "$DEPLOY_USER@$HOST:$RELEASE_DIR/deploy.tgz"
+          gzip -d "$RUNNER_TEMP/deployment-image/image.tar.gz"
+          ssh "${opts[@]}" "$DEPLOY_USER@$HOST" "if [ -f '$DEPLOY_PATH/image-cache/$SERVICE/image.tar' ] && [ ! -f '$RELEASE_DIR/image.tar' ]; then cp '$DEPLOY_PATH/image-cache/$SERVICE/image.tar' '$RELEASE_DIR/image.tar'; fi"
           printf -v ssh_command '%q ' ssh "${opts[@]}"
           for attempt in 1 2 3; do
-            if timeout 480 rsync --partial --append-verify --checksum --timeout=120 -e "$ssh_command" "$RUNNER_TEMP/deployment-image/image.tar.gz" "$DEPLOY_USER@$HOST:$RELEASE_DIR/image.tar.gz"; then
+            if timeout 480 rsync --partial --inplace --checksum --timeout=120 -e "$ssh_command" "$RUNNER_TEMP/deployment-image/image.tar" "$DEPLOY_USER@$HOST:$RELEASE_DIR/image.tar"; then
               break
             fi
             [ "$attempt" -lt 3 ] || exit 1

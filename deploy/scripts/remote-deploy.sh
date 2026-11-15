@@ -17,9 +17,10 @@ install -d scripts
 install -m 755 "$RELEASE_DIR/deploy/scripts/healthcheck.sh" scripts/healthcheck.sh
 [ -s .env ] || { echo 'Production .env is missing' >&2; exit 1; }
 # Transfer the CI-built image over SSH; cloud hosts need no registry credentials.
-if [ -s "$RELEASE_DIR/image.tar.gz" ]; then
-  docker load -i "$RELEASE_DIR/image.tar.gz"
-  rm -f "$RELEASE_DIR/image.tar.gz"
+if [ -s "$RELEASE_DIR/image.tar" ]; then
+  docker load -i "$RELEASE_DIR/image.tar"
+  install -d "image-cache/$SERVICE"
+  mv -f "$RELEASE_DIR/image.tar" "image-cache/$SERVICE/image.tar"
 fi
 previous=$(docker inspect "$SERVICE" --format '{{.Config.Image}}' 2>/dev/null || true)
 export "$TAG_VAR=$TAG"

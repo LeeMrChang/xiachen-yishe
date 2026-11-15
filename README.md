@@ -36,7 +36,7 @@ main 分支按路径触发 GitHub Actions：
 Variable：`DEPLOY_ENABLED`。
 Secrets：`DEPLOY_SSH_KEY`、`DEPLOY_KNOWN_HOSTS`、`DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_PATH`、`DEPLOY_WEB_ROOT`。
 
-镜像拉取使用本次 Actions 的短期 `GITHUB_TOKEN`，不用复制个人 GitHub Token；服务器临时 Docker 登录配置在任务结束后删除。SSH 校验已核对的主机密钥，不跳过主机认证。
+镜像由 Actions 推送 GHCR，同时打包为保留一天的部署制品，通过 SSH 传到服务器后加载；服务器无需保存 GHCR 凭据，也不依赖跨境拉取镜像。SSH 校验已核对的主机密钥，不跳过主机认证。
 
 服务器配置位于 `/home/ubuntu/xiachen-yishe/deploy/.env`，权限 600，模板见 `deploy/.env.example`。
 部署脚本会同步 Compose，并在健康检查成功后记录镜像 SHA。启动失败会尝试恢复上个容器镜像；首次发布失败则停止失败容器。**数据库迁移不自动回滚**，发布破坏性迁移前应备份数据库。
@@ -53,7 +53,7 @@ CI 通过全新数据库启动验证迁移，并断言生产 profile 商品列�
 
 - 内网：18091/18092 `/actuator/health`；公网屏蔽 `/actuator`。
 - `deploy/scripts/healthcheck.sh` 检查两个服务及首页接口；可用于 cron。
-- 手动回滚：在服务器 `.env` 将对应 `XC_API_TAG` / `XC_ADMIN_TAG` 改成已验证的 SHA，登录 GHCR 后执行 `docker compose up -d --no-deps <service>`，再检查健康。
+- 手动回滚：在服务器 `.env` 将对应 `XC_API_TAG` / `XC_ADMIN_TAG` 改成已验证的 SHA，确认该版本镜像仍在本机后执行 `docker compose up -d --no-deps --pull never <service>`，再检查健康。
 - 前端回滚：将站点 `current` 链接切回旧 `releases/<sha>`。
 
 ## 文档

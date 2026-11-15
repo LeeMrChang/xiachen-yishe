@@ -16,17 +16,15 @@ install -m 644 "$RELEASE_DIR/deploy/docker-compose.yml" docker-compose.yml
 install -d scripts
 install -m 755 "$RELEASE_DIR/deploy/scripts/healthcheck.sh" scripts/healthcheck.sh
 [ -s .env ] || { echo 'Production .env is missing' >&2; exit 1; }
-# Registry credentials expire with this job and are removed from the server after use.
-export DOCKER_CONFIG
-DOCKER_CONFIG=$(mktemp -d)
-trap 'rm -rf "$DOCKER_CONFIG"' EXIT
-if [ -n "${GHCR_TOKEN:-}" ]; then
-  printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+# Transfer the CI-built image over SSH; cloud hosts need no registry credentials.
+if [ -s "$RELEASE_DIR/image.tar.gz" ]; then
+  docker load -i "$RELEASE_DIR/image.tar.gz"
+  rm -f "$RELEASE_DIR/image.tar.gz"
 fi
 previous=$(docker inspect "$SERVICE" --format '{{.Config.Image}}' 2>/dev/null || true)
 export "$TAG_VAR=$TAG"
 docker compose config --quiet
-docker compose pull "$SERVICE"
+docker compose images "$SERVICE"
 healthy() {
   local attempts=${HEALTH_ATTEMPTS:-60}
   for ((i=0; i<attempts; i++)); do
@@ -38,7 +36,7 @@ healthy() {
   done
   return 1
 }
-if docker compose up -d --no-deps "$SERVICE" && healthy; then
+if docker compose up -d --no-deps --pull never "$SERVICE" && healthy; then
   # Persist only the successful service tag; later manual restarts keep this release.
   TAG_VAR="$TAG_VAR" TAG="$TAG" python3 - <<'PERSIST'
 import os,re
@@ -55,7 +53,7 @@ echo "::error::$SERVICE failed health check; rolling back container when possibl
 docker inspect "$SERVICE" --format '{{json .State}}' >&2 || true
 if [ -n "$previous" ]; then
   export "$TAG_VAR=${previous##*:}"
-  docker compose up -d --no-deps "$SERVICE"
+  docker compose up -d --no-deps --pull never "$SERVICE"
   healthy || echo '::error::Rollback health check failed' >&2
 else
   docker compose stop "$SERVICE"

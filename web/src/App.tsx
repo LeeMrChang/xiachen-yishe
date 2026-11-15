@@ -9,6 +9,8 @@ import InventoryPage from './pages/inventory/InventoryPage'
 import StoresPage from './pages/stores/StoresPage'
 import AppointmentsPage from './pages/appointments/AppointmentsPage'
 import LooksPage from './pages/looks/LooksPage'
+import CollectionsPage from './pages/collections/CollectionsPage'
+import CollectionEditorPage from './pages/collections/CollectionEditorPage'
 import LookEditorPage from './pages/looks/LookEditorPage'
 import HomeThemesPage from './pages/home-themes/HomeThemesPage'
 import HomeThemeEditorPage from './pages/home-themes/HomeThemeEditorPage'
@@ -42,6 +44,9 @@ export default function App() {
           <Route path="/looks" element={<LooksPage />} />
           <Route path="/looks/new" element={<LookEditorPage />} />
           <Route path="/looks/:id" element={<LookEditorPage />} />
+          <Route path="/collections" element={<CollectionsPage />} />
+          <Route path="/collections/new" element={<CollectionEditorPage />} />
+          <Route path="/collections/:id" element={<CollectionEditorPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/products" replace />} />
       </Routes>

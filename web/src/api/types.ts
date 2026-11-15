@@ -159,6 +159,37 @@ export interface CollectionOption {
   status: string
 }
 
+export interface CollectionRow {
+  id: number
+  name: string
+  coverUrl: string
+  story: string
+  publishAt: string | null
+  status: string
+  sortNo: number
+  productCount: number
+  updatedAt: string | null
+}
+
+export interface CollectionDetail {
+  id: number
+  name: string
+  coverUrl: string
+  story: string
+  publishAt: string | null
+  status: string
+  sortNo: number
+  updatedAt: string | null
+  products: {
+    productId: number
+    title: string
+    coverUrl: string
+    priceCent: number
+    status: string
+    sortNo: number
+  }[]
+}
+
 export interface HomeThemeRow {
   id: number
   name: string

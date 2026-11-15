@@ -30,6 +30,9 @@ export default function AdminLayout() {
           <NavLink to="/inventory" className={({ isActive }) => (isActive ? 'nav__item nav__item--active' : 'nav__item')}>
             库存维护
           </NavLink>
+          <NavLink to="/collections" className={({ isActive }) => (isActive ? 'nav__item nav__item--active' : 'nav__item')}>
+            系列维护
+          </NavLink>
           <NavLink to="/looks" className={({ isActive }) => (isActive ? 'nav__item nav__item--active' : 'nav__item')}>
             造型维护
           </NavLink>

@@ -1,0 +1,419 @@
+{
+  "_comment": "夏晨衣舍门店数据源。scripts/seed-storefront.mjs 按此文件录入商品/造型/首页主题。改这里即可，不用改代码。",
+  "defaults": {
+    "stockByStore": {
+      "夏晨衣舍 · 罗湖店": 8,
+      "夏晨衣舍 · 福田店": 6,
+      "夏晨衣舍 · 盐田店": 4
+    },
+    "originPriceRatio": 1.3
+  },
+  "products": [
+    {
+      "file": "微信图片_2026-11-14_145202_253.jpg",
+      "title": "复古水洗阔腿牛仔裤",
+      "subtitle": "高腰直筒版型，显腿长的秋冬底色",
+      "category": "下装",
+      "season": "AW",
+      "price": 329,
+      "origin": 429,
+      "colors": [
+        "复古蓝"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "sortWeight": 200
+    },
+    {
+      "file": "微信图片_2026-11-14_145214_602.jpg",
+      "title": "经典直筒牛仔裤",
+      "subtitle": "微硬挺水洗牛仔，通勤好搭",
+      "category": "下装",
+      "season": "AW",
+      "price": 319,
+      "origin": 419,
+      "colors": [
+        "复古蓝"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "sortWeight": 199
+    },
+    {
+      "file": "微信图片_2026-11-14_145230_521.jpg",
+      "title": "基础款黑色长袖上衣",
+      "subtitle": "亲肤弹力面料，打底不挑人",
+      "category": "上装",
+      "season": "ALL",
+      "price": 159,
+      "origin": 219,
+      "colors": [
+        "黑色"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "sortWeight": 198
+    },
+    {
+      "file": "微信图片_2026-11-14_145236_760.jpg",
+      "title": "云朵白针织长袖",
+      "subtitle": "细针织纹理，单穿内搭都温柔",
+      "category": "上装",
+      "season": "AW",
+      "price": 189,
+      "origin": 249,
+      "colors": [
+        "米白"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "sortWeight": 197
+    },
+    {
+      "file": "微信图片_2026-11-14_145259_527.jpg",
+      "title": "酒红针织马甲",
+      "subtitle": "叠穿白T的复古层次感",
+      "category": "上装",
+      "season": "AW",
+      "price": 259,
+      "origin": 339,
+      "colors": [
+        "酒红"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "sortWeight": 196
+    },
+    {
+      "file": "微信图片_2026-11-14_145315_317.jpg",
+      "title": "樱花粉阔腿休闲裤",
+      "subtitle": "垂顺阔腿剪裁，气色提亮",
+      "category": "下装",
+      "season": "SS",
+      "price": 299,
+      "origin": 399,
+      "colors": [
+        "樱花粉"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "sortWeight": 195
+    },
+    {
+      "file": "微信图片_2026-11-14_145329_435.jpg",
+      "title": "8211# 慵懒连帽卫衣",
+      "subtitle": "落肩宽松版型，秋冬外穿首选",
+      "category": "上装",
+      "season": "AW",
+      "price": 269,
+      "origin": 349,
+      "colors": [
+        "燕麦灰"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "sortWeight": 194
+    },
+    {
+      "file": "微信图片_2026-11-14_145338_583.jpg",
+      "title": "轻羽绒立领马甲",
+      "subtitle": "90 绒短款，轻便保暖不臃肿",
+      "category": "上装",
+      "season": "AW",
+      "price": 399,
+      "origin": 529,
+      "colors": [
+        "米白"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "sortWeight": 193
+    },
+    {
+      "file": "微信图片_2026-11-14_145351_583.jpg",
+      "title": "黑色短版西装外套",
+      "subtitle": "收腰短版，配短裙长靴都利落",
+      "category": "上装",
+      "season": "AW",
+      "price": 459,
+      "origin": 599,
+      "colors": [
+        "黑色"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "sortWeight": 192
+    },
+    {
+      "file": "微信图片_2026-11-14_145412_788.jpg",
+      "title": "灰调针织开衫",
+      "subtitle": "复古灰调，春秋百搭薄外套",
+      "category": "上装",
+      "season": "AW",
+      "price": 329,
+      "origin": 429,
+      "colors": [
+        "烟灰"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "sortWeight": 191
+    },
+    {
+      "file": "微信图片_2026-11-14_145418_622.jpg",
+      "title": "驼色圆领针织开衫",
+      "subtitle": "暖驼色系扣款，显气质",
+      "category": "上装",
+      "season": "AW",
+      "price": 339,
+      "origin": 449,
+      "colors": [
+        "驼色"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "sortWeight": 190
+    },
+    {
+      "file": "微信图片_2026-11-14_145449_663.jpg",
+      "title": "照片印花圆领卫衣",
+      "subtitle": "深灰底拼贴印花，街头感",
+      "category": "上装",
+      "season": "AW",
+      "price": 289,
+      "origin": 379,
+      "colors": [
+        "深灰"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "sortWeight": 189
+    },
+    {
+      "file": "微信图片_2026-11-14_145541_284.jpg",
+      "title": "军绿工装马甲",
+      "subtitle": "多口袋工装版型，叠穿有型",
+      "category": "上装",
+      "season": "AW",
+      "price": 279,
+      "origin": 369,
+      "colors": [
+        "军绿"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "sortWeight": 188
+    },
+    {
+      "file": "微信图片_2026-11-14_145550_934.jpg",
+      "title": "米白绗缝夹棉外套",
+      "subtitle": "菱格绗缝，轻盈保暖",
+      "category": "上装",
+      "season": "AW",
+      "price": 599,
+      "origin": 799,
+      "colors": [
+        "米白"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "sortWeight": 187
+    },
+    {
+      "file": "微信图片_2026-11-14_145635_171.jpg",
+      "title": "7988# 三色连帽卫衣",
+      "subtitle": "雾霾蓝 / 樱花粉 / 焦糖橙三色同款",
+      "category": "上装",
+      "season": "AW",
+      "price": 259,
+      "origin": 339,
+      "colors": [
+        "雾霾蓝",
+        "樱花粉",
+        "焦糖橙"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "sortWeight": 186
+    },
+    {
+      "file": "微信图片_2026-11-14_145655_862.jpg",
+      "title": "军绿插画印花T恤",
+      "subtitle": "纯棉宽松版，插画印花",
+      "category": "上装",
+      "season": "SS",
+      "price": 149,
+      "origin": 199,
+      "colors": [
+        "军绿"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "sortWeight": 185
+    }
+  ],
+  "collections": [
+    {
+      "name": "AW26 秋冬系列",
+      "story": "这一季我们回到羊毛与大地色，做能穿很多年的日常单品。",
+      "sortNo": 1,
+      "productTitles": [
+        "复古水洗阔腿牛仔裤",
+        "经典直筒牛仔裤",
+        "基础款黑色长袖上衣",
+        "云朵白针织长袖",
+        "酒红针织马甲",
+        "樱花粉阔腿休闲裤",
+        "8211# 慵懒连帽卫衣",
+        "轻羽绒立领马甲",
+        "黑色短版西装外套",
+        "灰调针织开衫",
+        "驼色圆领针织开衫",
+        "照片印花圆领卫衣",
+        "军绿工装马甲",
+        "米白绗缝夹棉外套",
+        "7988# 三色连帽卫衣",
+        "军绿插画印花T恤"
+      ]
+    }
+  ],
+  "looks": [
+    {
+      "title": "周末牛仔",
+      "description": "复古直筒牛仔 + 云朵白针织 + 轻羽绒马甲，周末逛街一整套。",
+      "coverProduct": "复古水洗阔腿牛仔裤",
+      "products": [
+        "复古水洗阔腿牛仔裤",
+        "云朵白针织长袖",
+        "轻羽绒立领马甲"
+      ],
+      "sortNo": 1
+    },
+    {
+      "title": "驼色通勤",
+      "description": "驼色开衫 + 黑色长袖打底 + 经典直筒牛仔，通勤显气质。",
+      "coverProduct": "驼色圆领针织开衫",
+      "products": [
+        "驼色圆领针织开衫",
+        "基础款黑色长袖上衣",
+        "经典直筒牛仔裤"
+      ],
+      "sortNo": 2
+    },
+    {
+      "title": "酒红叠穿",
+      "description": "酒红马甲叠穿奶白针织，配直筒牛仔裤，层次感十足。",
+      "coverProduct": "酒红针织马甲",
+      "products": [
+        "酒红针织马甲",
+        "云朵白针织长袖",
+        "经典直筒牛仔裤"
+      ],
+      "sortNo": 3
+    }
+  ],
+  "theme": {
+    "name": "AW26 秋冬 · 新装到店",
+    "copyText": "COLLECTION 02 · 三店同步上新",
+    "coverProduct": "7988# 三色连帽卫衣",
+    "modules": [
+      {
+        "type": "BANNER",
+        "imageProduct": "米白绗缝夹棉外套"
+      },
+      {
+        "type": "RECOMMEND"
+      },
+      {
+        "type": "COLLECTION",
+        "collectionName": "AW26 秋冬系列",
+        "optional": true
+      },
+      {
+        "type": "LOOK"
+      },
+      {
+        "type": "STORE",
+        "storeName": "夏晨衣舍 · 罗湖店"
+      }
+    ]
+  },
+  "cleanup": {
+    "_comment": "db/demo 种子数据，上线前应下线；生产库通常没有这些，脚本会跳过。",
+    "productTitles": [
+      "燕麦色落肩针织开衫",
+      "茶褐直筒西裤",
+      "焦糖棕羊毛短外套",
+      "奶油白高领打底衫",
+      "奶白夹棉短外套",
+      "高领羊毛打底",
+      "直筒牛仔裤",
+      "黑色圆领针织衫",
+      "拼色针织开衫",
+      "水洗阔腿牛仔"
+    ],
+    "lookTitles": [
+      "焦糖棕 · 通勤一层层",
+      "奶白 · 周末轻出行",
+      "燕麦针织 · 日常叠穿"
+    ],
+    "themeNames": [
+      "WINTER 2026"
+    ]
+  }
+}

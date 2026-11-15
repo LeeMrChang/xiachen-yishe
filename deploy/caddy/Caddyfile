@@ -1,13 +1,17 @@
+# Append to the existing gateway config after validation; preserve cost/resume sites.
 xc-api.xiachen.xyz {
-    reverse_proxy 127.0.0.1:8081
+    @internal path /actuator /actuator/*
+    respond @internal 404
+    reverse_proxy 127.0.0.1:18091
 }
-
 admin.xiachen.xyz {
+    @internal path /actuator /actuator/*
+    respond @internal 404
     handle /api/* {
-        reverse_proxy 127.0.0.1:8082
+        reverse_proxy 127.0.0.1:18092
     }
     handle {
-        root * /srv/web
+        root * /srv/xiachen-admin/current
         try_files {path} /index.html
         file_server
     }

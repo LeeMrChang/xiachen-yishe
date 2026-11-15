@@ -1,60 +1,70 @@
 name: web
-
 on:
   push:
     branches: [main]
-    paths:
-      - 'web/**'
-      - '.github/workflows/web.yml'
+    paths: ['web/**', '.github/workflows/web.yml', 'deploy/scripts/deploy-web.sh']
+  pull_request:
+    paths: ['web/**', '.github/workflows/web.yml']
   workflow_dispatch:
-
+permissions:
+  contents: read
 concurrency:
   group: web-${{ github.ref }}
   cancel-in-progress: false
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: web/package-lock.json
-
       - run: npm ci
       - run: npm run build
-
       - uses: actions/upload-artifact@v4
         with:
           name: web-dist
           path: web/dist
           retention-days: 7
-
   deploy:
     needs: build
-    if: vars.DEPLOY_ENABLED == 'true'
+    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: web-dist
           path: dist
-
-      - name: Sync static files
+      - name: Publish static release atomically
+        shell: bash
         env:
           DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           HOST: ${{ secrets.DEPLOY_HOST }}
-          USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           WEB_ROOT: ${{ secrets.DEPLOY_WEB_ROOT }}
+          TAG: ${{ github.sha }}
         run: |
+          set -euo pipefail
+          : "${WEB_ROOT:?}" "${KNOWN_HOSTS:?}"
+          [[ "$WEB_ROOT" =~ ^/[a-zA-Z0-9/_-]+$ ]]
           install -m 600 /dev/null "$RUNNER_TEMP/key"
           printf '%s\n' "$DEPLOY_KEY" > "$RUNNER_TEMP/key"
-          rsync -az --delete \
-            -e "ssh -i $RUNNER_TEMP/key -o StrictHostKeyChecking=no" \
-            dist/ "$USER@$HOST:${WEB_ROOT:-/srv/web}/"
+          printf '%s\n' "$KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+          opts=(-i "$RUNNER_TEMP/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts")
+          ARCHIVE="$WEB_ROOT/releases/$TAG.tgz"
+          tar -czf "$RUNNER_TEMP/web.tgz" -C dist .
+          ssh "${opts[@]}" "$DEPLOY_USER@$HOST" "mkdir -p '$WEB_ROOT/releases'"
+          scp "${opts[@]}" "$RUNNER_TEMP/web.tgz" "$DEPLOY_USER@$HOST:$ARCHIVE"
+          {
+            for name in WEB_ROOT TAG ARCHIVE; do printf 'export %s=%q\n' "$name" "${!name}"; done
+            cat deploy/scripts/deploy-web.sh
+          } | ssh "${opts[@]}" "$DEPLOY_USER@$HOST" bash -s

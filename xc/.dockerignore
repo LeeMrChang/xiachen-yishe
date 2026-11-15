@@ -1,0 +1,8 @@
+**
+!Dockerfile
+!xc-api/
+!xc-api/target/
+!xc-api/target/*.jar
+!xc-admin/
+!xc-admin/target/
+!xc-admin/target/*.jar

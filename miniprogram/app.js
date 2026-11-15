@@ -3,7 +3,7 @@ const auth = require('./utils/auth')
 App({
   globalData: {
     appId: 'touristappid',
-    // 开发者工具/模拟器走本机；真机联调改成电脑局域网 IP，上线换成 https 域名
+    // develop 保留本机调试；体验版/正式版使用云端 HTTPS。
     baseUrl: 'http://127.0.0.1:8081',
     token: null,
     user: null,
@@ -11,6 +11,12 @@ App({
   },
 
   onLaunch() {
+    const account = wx.getAccountInfoSync ? wx.getAccountInfoSync() : null
+    const mini = account && account.miniProgram
+    if (mini && mini.appId) this.globalData.appId = mini.appId
+    if (mini && mini.envVersion && mini.envVersion !== 'develop') {
+      this.globalData.baseUrl = 'https://xc-api.xiachen.xyz'
+    }
     auth.restore(this)
   }
 })

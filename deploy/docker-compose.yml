@@ -1,34 +1,41 @@
+# Reuse the existing MySQL/Redis Docker network; only Caddy can reach host loopback ports.
+name: xiachen-yishe
 services:
   xc-api:
-    image: ${XC_IMAGE_REPO:-xiachen}/xc-api:${XC_API_TAG:-latest}
+    image: ${XC_IMAGE_REPO:?set XC_IMAGE_REPO}/xc-api:${XC_API_TAG:-latest}
     container_name: xc-api
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8081:8081"
-    mem_limit: 768m
-    env_file:
-      - .env
+      - "127.0.0.1:${XC_API_PORT:-18091}:8081"
+    networks: [data]
+    mem_limit: 640m
+    env_file: [.env]
     environment:
-      JAVA_TOOL_OPTIONS: "-Xmx384m -XX:+UseZGC"
+      JWT_SECRET: ${XC_API_JWT_SECRET:?set XC_API_JWT_SECRET}
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_ADDRESS: 0.0.0.0
+      JAVA_TOOL_OPTIONS: "-Xmx320m -XX:+UseZGC"
     logging:
       driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
+      options: {max-size: "10m", max-file: "3"}
   xc-admin:
-    image: ${XC_IMAGE_REPO:-xiachen}/xc-admin:${XC_ADMIN_TAG:-latest}
+    image: ${XC_IMAGE_REPO:?set XC_IMAGE_REPO}/xc-admin:${XC_ADMIN_TAG:-latest}
     container_name: xc-admin
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8082:8082"
+      - "127.0.0.1:${XC_ADMIN_PORT:-18092}:8082"
+    networks: [data]
     mem_limit: 512m
-    env_file:
-      - .env
+    env_file: [.env]
     environment:
+      JWT_SECRET: ${XC_ADMIN_JWT_SECRET:?set XC_ADMIN_JWT_SECRET}
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_ADDRESS: 0.0.0.0
       JAVA_TOOL_OPTIONS: "-Xmx256m -XX:+UseZGC"
     logging:
       driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+      options: {max-size: "10m", max-file: "3"}
+networks:
+  data:
+    external: true
+    name: ${XC_DATA_NETWORK:-cost-cloud_default}

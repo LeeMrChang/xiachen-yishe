@@ -9,9 +9,9 @@
 #   ALERT_NAME     告警前缀，默认「夏晨衣舍」
 set -u
 
-API_HEALTH=${API_HEALTH:-http://127.0.0.1:8081/actuator/health}
-ADMIN_HEALTH=${ADMIN_HEALTH:-http://127.0.0.1:8082/actuator/health}
-API_HOME=${API_HOME:-http://127.0.0.1:8081/api/v1/home}
+API_HEALTH=${API_HEALTH:-http://127.0.0.1:18091/actuator/health}
+ADMIN_HEALTH=${ADMIN_HEALTH:-http://127.0.0.1:18092/actuator/health}
+API_HOME=${API_HOME:-http://127.0.0.1:18091/api/v1/home}
 LOG_FILE=${LOG_FILE:-/var/log/xc-healthcheck.log}
 
 failures=()

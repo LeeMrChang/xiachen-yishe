@@ -42,7 +42,7 @@ Secrets：`DEPLOY_SSH_KEY`、`DEPLOY_KNOWN_HOSTS`、`DEPLOY_HOST`、`DEPLOY_USER
 
 部署分为配置上传、镜像传输、校验加载、启动验收四步。单次 rsync 最多 900 秒，无数据传输最多等待 120 秒，失败最多尝试三次并输出退出码、耗时、进度和传输统计。整个部署 job 为 75 分钟，覆盖最多 45 分钟传输及加载、健康检查和回滚预算。加载前校验归档 SHA-256 与镜像 revision，启动后核对运行容器镜像 ID；API 验证首页响应，admin 验证未登录访问系列接口仍返回 401。系列写入流程只在 CI 的隔离数据库验证。
 
-需要排查传输迟缓时，可手动运行 `deploy-diagnostics` 并填写完整发布 SHA。该任务只读取传输进程、归档大小、SSH 计数和健康状态，不加载镜像、不修改数据。
+需要排查传输迟缓时，可手动运行 `deploy-diagnostics` 并填写完整发布 SHA。默认只读取传输进程、归档大小、SSH 计数和健康状态。可选 `registry_pull` 会用当前 job 的短期 token 测试拉取 API 镜像到服务器缓存，凭据目录退出时清理，不重启服务。
 
 服务器配置位于 `/home/ubuntu/xiachen-yishe/deploy/.env`，权限 600，模板见 `deploy/.env.example`。
 部署脚本会同步 Compose，并在版本、健康和业务检查成功后记录镜像 SHA。启动或验收失败会尝试恢复上个容器镜像；首次发布失败则停止失败容器。**数据库迁移不自动回滚**，发布破坏性迁移前应备份数据库。

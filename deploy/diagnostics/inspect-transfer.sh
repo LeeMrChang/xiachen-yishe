@@ -9,7 +9,22 @@ for service in xc-api xc-admin; do
   if [ -f "$archive" ]; then
     stat --printf="$service archive: %s bytes; modified %y\n" "$archive"
   fi
+  if [ -f "$DEPLOY_PATH/image-cache/$service/image.tar" ]; then
+    stat --printf="$service delta basis: %s bytes; modified %y\n" "$DEPLOY_PATH/image-cache/$service/image.tar"
+  fi
 done
+if [ "${REGISTRY_PROBE:-false}" = true ]; then
+  : "${REGISTRY_TOKEN:?}" "${REGISTRY_USER:?}" "${GITHUB_REPOSITORY:?}"
+  registry_config=$(mktemp -d)
+  trap 'rm -rf "$registry_config"' EXIT
+  export DOCKER_CONFIG="$registry_config"
+  printf '%s' "$REGISTRY_TOKEN" | timeout 30 docker login ghcr.io --username "$REGISTRY_USER" --password-stdin >/dev/null
+  unset REGISTRY_TOKEN
+  repository=$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
+  started=$SECONDS
+  timeout --kill-after=10s 180 docker pull "ghcr.io/$repository/xc-api:$TAG"
+  echo "Registry pull completed in $((SECONDS - started))s"
+fi
 python3 - <<'PY'
 import re, subprocess, time
 def counters():

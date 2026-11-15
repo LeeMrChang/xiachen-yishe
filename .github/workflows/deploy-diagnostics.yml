@@ -6,12 +6,17 @@ on:
         description: Full release SHA to inspect (read-only)
         required: true
         type: string
+      registry_pull:
+        description: Also test pulling xc-api into the image cache (no service restart)
+        type: boolean
+        default: false
 permissions:
   contents: read
+  packages: read
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
       - name: Inspect transfer processes and network counters
@@ -22,6 +27,9 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           TAG: ${{ inputs.tag }}
+          REGISTRY_PROBE: ${{ inputs.registry_pull }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_USER: ${{ github.actor }}
         run: |
           set -euo pipefail
           [[ "$DEPLOY_PATH" =~ ^/[a-zA-Z0-9/_-]+$ ]]
@@ -32,7 +40,10 @@ jobs:
           printf '%s\n' "$KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
           {
             printf 'export DEPLOY_PATH=%q TAG=%q\n' "$DEPLOY_PATH" "$TAG"
+            for name in REGISTRY_PROBE REGISTRY_TOKEN REGISTRY_USER GITHUB_REPOSITORY; do
+              printf 'export %s=%q\n' "$name" "${!name}"
+            done
             cat deploy/diagnostics/inspect-transfer.sh
-          } | timeout 90 ssh -i "$RUNNER_TEMP/key" -o BatchMode=yes -o StrictHostKeyChecking=yes \
+          } | timeout 270 ssh -i "$RUNNER_TEMP/key" -o BatchMode=yes -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" -o ConnectTimeout=15 \
             -o ServerAliveInterval=15 -o ServerAliveCountMax=4 "$DEPLOY_USER@$HOST" bash -s

@@ -2,7 +2,7 @@
 name: xiachen-yishe
 services:
   xc-api:
-    image: ${XC_IMAGE_REPO:?set XC_IMAGE_REPO}/xc-api:${XC_API_TAG:-latest}
+    image: ${XC_API_IMAGE:-${XC_IMAGE_REPO:?set XC_IMAGE_REPO}/xc-api:${XC_API_TAG:-latest}}
     container_name: xc-api
     restart: unless-stopped
     ports:
@@ -19,7 +19,7 @@ services:
       driver: json-file
       options: {max-size: "10m", max-file: "3"}
   xc-admin:
-    image: ${XC_IMAGE_REPO:?set XC_IMAGE_REPO}/xc-admin:${XC_ADMIN_TAG:-latest}
+    image: ${XC_ADMIN_IMAGE:-${XC_IMAGE_REPO:?set XC_IMAGE_REPO}/xc-admin:${XC_ADMIN_TAG:-latest}}
     container_name: xc-admin
     restart: unless-stopped
     ports:

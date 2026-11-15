@@ -9,7 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
+    outputs:
+      image_ref: ${{ steps.reference.outputs.image_ref }}
     services:
       mysql:
         image: mysql:8.4
@@ -25,7 +27,28 @@ jobs:
         ports: ['6379:6379']
         options: --health-cmd="redis-cli ping" --health-interval=5s --health-retries=20
     steps:
+      - name: Check TCR publication configuration
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          IMAGE_REPO: ${{ vars.TCR_IMAGE_REPO }}
+          REGISTRY_USER: ${{ vars.TCR_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.TCR_PASSWORD }}
+          IMAGE_NAME: ${{ inputs.image }}
+        run: |
+          set -euo pipefail
+          : "${IMAGE_REPO:?Set Actions variable TCR_IMAGE_REPO}" "${REGISTRY_USER:?Set Actions variable TCR_USERNAME}" "${REGISTRY_PASSWORD:?Set Actions secret TCR_PASSWORD}"
+          [[ "$IMAGE_REPO" =~ ^ccr\.ccs\.tencentyun\.com/[a-z0-9][a-z0-9._-]*$ ]]
+          case "$IMAGE_NAME" in xc-api|xc-admin) ;; *) exit 1;; esac
+          echo "IMAGE=$IMAGE_REPO/$IMAGE_NAME" >> "$GITHUB_ENV"
+      - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        with:
+          registry: ccr.ccs.tencentyun.com
+          username: ${{ vars.TCR_USERNAME }}
+          password: ${{ secrets.TCR_PASSWORD }}
       - uses: actions/checkout@v4
+      - name: Validate deployment scripts and Compose migration
+        run: python3 -m unittest discover -s deploy/tests -p 'test_*.py'
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -49,21 +72,39 @@ jobs:
           COS_BUCKET: ci-placeholder-1513506595
           COS_KEY_PREFIX: ci
         run: bash deploy/scripts/smoke-test.sh ${{ inputs.module }}
-      - name: Package checked backend source
+      - uses: docker/setup-buildx-action@v3
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        run: python3 deploy/scripts/backend-source.py pack "$RUNNER_TEMP/deployment-source" "$GITHUB_SHA"
-      - uses: actions/upload-artifact@v4
+      - name: Build and push image to TCR
+        id: image
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
         with:
-          name: source-${{ inputs.service }}
-          path: ${{ runner.temp }}/deployment-source/source.tar.gz*
-          retention-days: 7
+          context: xc
+          file: xc/Dockerfile
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          build-args: MODULE=${{ inputs.module }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ inputs.service }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.service }}
+      - name: Record immutable image reference
+        id: reference
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          echo "image_ref=$IMAGE@$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
   deploy:
     needs: build
     if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    # 4m source upload + 40m cold cloud build + 15m activation/rollback + margin.
-    timeout-minutes: 65
+    # Configuration + bounded TCR pull + version/health checks and rollback.
+    timeout-minutes: 35
     concurrency:
       # Each caller permits one active release: at most API + admin reach this group.
       group: xiachen-backend-production
@@ -79,16 +120,16 @@ jobs:
       SERVICE: ${{ inputs.service }}
       TAG_VAR: ${{ inputs.tag_var }}
       TAG: ${{ github.sha }}
+      IMAGE_REF: ${{ needs.build.outputs.image_ref }}
+      REGISTRY_USER: ${{ vars.TCR_USERNAME }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: source-${{ inputs.service }}
-          path: ${{ runner.temp }}/deployment-source
-      - name: Upload checked source and deployment configuration
+      - name: Upload deployment configuration
         run: bash deploy/scripts/backend-release.sh prepare
-      - name: Build target image on server through domestic mirrors
-        run: bash deploy/scripts/backend-release.sh build
+      - name: Pull verified image from TCR
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.TCR_PASSWORD }}
+        run: bash deploy/scripts/backend-release.sh pull
       - name: Activate service and verify version and business endpoints
         run: bash deploy/scripts/backend-release.sh activate
       - name: Remove temporary SSH key

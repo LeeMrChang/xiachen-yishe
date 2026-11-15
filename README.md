@@ -16,7 +16,7 @@ main 分支按路径触发 GitHub Actions：
 
 | 工作流 | 行为 |
 | --- | --- |
-| xc-api / xc-admin | Java verify → 隔离 MySQL/Redis 启动与系列业务测试 → 源码小包 → 腾讯云服务器构建 → 版本、健康与业务检查 |
+| xc-api / xc-admin | TCR 登录校验 → Java verify → 隔离 MySQL/Redis 业务测试 → CI 构建并推送 TCR → 服务器按摘要拉取与验收 |
 | web | npm ci、类型检查和构建 → 静态文件上传 → 原子切换 current 链接 |
 | miniprogram | JavaScript/JSON 校验；不自动上传微信、不自动提审 |
 | scripts | 录入脚本语法与数据引用校验、失败退出测试、部署传输与回滚测试 |
@@ -35,18 +35,18 @@ main 分支按路径触发 GitHub Actions：
 
 ### GitHub 配置
 
-Variable：`DEPLOY_ENABLED`。
-Secrets：`DEPLOY_SSH_KEY`、`DEPLOY_KNOWN_HOSTS`、`DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_PATH`、`DEPLOY_WEB_ROOT`。
+Variables：`DEPLOY_ENABLED`、`TCR_IMAGE_REPO=ccr.ccs.tencentyun.com/leemrchang-xiachen-yishe`、`TCR_USERNAME`。
+Secrets：`DEPLOY_SSH_KEY`、`DEPLOY_KNOWN_HOSTS`、`DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_PATH`、`DEPLOY_WEB_ROOT`、`TCR_PASSWORD`。
 
-GitHub Actions 验证源码后只打包后端 POM、Dockerfile、构建设置和 `src/main`，上传约 67 KB 的源码包及 SHA-256。不会上传 `.env`、`application-local.yml`、本机 target 或图片。服务器验证归档白名单、路径、校验和与源码 SHA，然后在 Docker 内构建镜像，不在宿主机安装 Maven/Java。
+两个私有镜像仓库为 `ccr.ccs.tencentyun.com/leemrchang-xiachen-yishe/xc-api`、`xc-admin`。`TCR_PASSWORD` 是 TCR 仓库登录密码，与云服务器登录密码不同。已有个人版凭据可用于夏晨；修改 TCR 密码时需要同步维护使用该凭据的其他项目。
 
-服务器使用腾讯云 Maven/JRE 镜像与 Maven 仓库，先按 POM 缓存构建依赖层，再复制源码编译。构建串行执行，限制单次 1 CPU / 1 GiB；开始前要求至少 1536 MiB 可用内存、4 GiB 空闲磁盘。首次建立依赖缓存可能较慢；上传、资源不足或构建失败均不替换运行中的服务。
+GitHub Actions 先验证 TCR 登录，随后编译 JAR、运行隔离数据库冒烟测试、构建 linux/amd64 镜像并推送完整源码 SHA 标签。发布使用推送结果的 `@sha256:...` 不可变摘要，不依赖 `latest`。生产服务器只同步部署配置、登录 TCR、拉取和启动镜像，不上传镜像归档，也不在服务器编译 Java 或构建 Docker 镜像。
 
-部署分为源码上传、云端构建、启动验收三步。整个部署 job 为 65 分钟，包含最多 40 分钟冷构建和 15 分钟启动检查/回滚预算。镜像沿用 `.env` 中现有仓库前缀和完整 SHA 标签，在服务器本地构建；现有 `ghcr.io/...` 前缀只用于兼容镜像命名，发布不再依赖 GHCR 推拉。默认不向腾讯云 CCR 推送，需要归档时再单独配置夏晨的仓库与凭据。
+服务器拉取使用独立的临时 Docker 凭据目录，成功或失败退出时清理，不修改宿主机默认登录配置。拉取后检查镜像 revision，启动后核对运行容器镜像 ID；API 验证首页响应，admin 验证未登录访问系列接口仍返回 401。系列写入流程只在 CI 的隔离数据库验证。SSH 校验主机密钥并设置连接超时与保活。
 
-启动后核对运行容器镜像 ID 与 revision；API 验证首页响应，admin 验证未登录访问系列接口仍返回 401。系列写入流程只在 CI 的隔离数据库验证。SSH 校验主机密钥并设置连接超时与保活。
+部署 job 为 35 分钟；TCR 登录最多 30 秒、拉取最多 10 分钟，保留启动检查和回滚预算。两个后端共用发布并发组。每个服务分别持久化 `XC_API_IMAGE` / `XC_ADMIN_IMAGE` 的完整镜像引用，以及对应源码 SHA；首次迁移到 TCR 时未发布的服务仍可沿用旧仓库。`XC_IMAGE_REPO` 与 `*_TAG` 的组合仅作为旧配置的兼容回退。
 
-需要排查历史镜像传输时，可手动运行 `deploy-diagnostics` 并填写完整发布 SHA。默认只读取传输进程、归档大小、SSH 计数和健康状态。可选 `registry_pull` 用当前 job 的短期 token 测试历史 GHCR API 镜像拉取，凭据目录退出时清理，不重启服务。
+需要排查历史归档传输时，可手动运行 `deploy-diagnostics`。默认只读取传输进程、归档大小、SSH 计数和健康状态；可选 `registry_pull` 仅用于历史 GHCR API 镜像测试。
 
 服务器配置位于 `/home/ubuntu/xiachen-yishe/deploy/.env`，权限 600，模板见 `deploy/.env.example`。
 部署脚本会同步 Compose，并在版本、健康和业务检查成功后记录镜像 SHA。启动或验收失败会尝试恢复上个容器镜像；首次发布失败则停止失败容器。**数据库迁移不自动回滚**，发布破坏性迁移前应备份数据库。
@@ -71,7 +71,7 @@ CI 通过全新数据库启动验证迁移，并断言生产 profile 商品列�
 
 - 内网：18091/18092 `/actuator/health`；公网屏蔽 `/actuator`。
 - `deploy/scripts/healthcheck.sh` 检查两个服务及首页接口；可用于 cron。
-- 手动回滚：在服务器 `.env` 将对应 `XC_API_TAG` / `XC_ADMIN_TAG` 改成已验证的 SHA，确认该版本镜像仍在本机后执行 `docker compose up -d --no-deps --pull never <service>`，再检查健康。
+- 手动回滚：在服务器 `.env` 将对应 `XC_API_IMAGE` / `XC_ADMIN_IMAGE` 改成已验证的完整镜像引用（优先使用 `@sha256:...`），确认该镜像仍在本机后执行 `docker compose up -d --no-deps --pull never <service>`，再检查健康。
 - 前端回滚：将站点 `current` 链接切回旧 `releases/<sha>`。
 
 ## 门店数据录入

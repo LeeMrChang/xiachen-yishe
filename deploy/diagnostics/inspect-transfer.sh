@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Read-only diagnostics: never print process arguments, credentials or application logs.
+# Default read-only; optional registry probe populates the image cache without restarting services.
 set -euo pipefail
 : "${DEPLOY_PATH:?}" "${TAG:?}"
 echo 'Transfer process elapsed time and CPU/memory usage:'

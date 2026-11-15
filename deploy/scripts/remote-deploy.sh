@@ -16,7 +16,7 @@ install -m 644 "$RELEASE_DIR/deploy/docker-compose.yml" docker-compose.yml
 install -d scripts
 install -m 755 "$RELEASE_DIR/deploy/scripts/healthcheck.sh" scripts/healthcheck.sh
 [ -s .env ] || { echo 'Production .env is missing' >&2; exit 1; }
-# The separate load step has already verified the archive and revision label.
+# Image preparation has verified the source/archive and revision label.
 expected_id=$(docker image inspect "$IMAGE_REF" --format '{{.Id}}')
 revision=$(docker image inspect "$IMAGE_REF" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')
 [ "$revision" = "$TAG" ] || { echo 'Target image revision mismatch' >&2; exit 1; }

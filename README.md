@@ -16,7 +16,7 @@ main 分支按路径触发 GitHub Actions：
 
 | 工作流 | 行为 |
 | --- | --- |
-| xc-api / xc-admin | Java verify → 隔离 MySQL/Redis 启动与系列业务测试 → GHCR 完整 SHA 镜像 → SSH 单服务发布 → 版本、健康与业务检查 |
+| xc-api / xc-admin | Java verify → 隔离 MySQL/Redis 启动与系列业务测试 → 源码小包 → 腾讯云服务器构建 → 版本、健康与业务检查 |
 | web | npm ci、类型检查和构建 → 静态文件上传 → 原子切换 current 链接 |
 | miniprogram | JavaScript/JSON 校验；不自动上传微信、不自动提审 |
 | scripts | 录入脚本语法与数据引用校验、失败退出测试、部署传输与回滚测试 |
@@ -38,11 +38,15 @@ main 分支按路径触发 GitHub Actions：
 Variable：`DEPLOY_ENABLED`。
 Secrets：`DEPLOY_SSH_KEY`、`DEPLOY_KNOWN_HOSTS`、`DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_PATH`、`DEPLOY_WEB_ROOT`。
 
-镜像由 Actions 推送 GHCR，同时打包为保留七天的部署制品，通过 SSH 传到服务器后加载；服务器无需保存 GHCR 凭据，也不依赖跨境拉取镜像。服务器保留每个服务最近一份 tar 镜像归档，后续通过 rsync 传输差异并启用网络压缩，支持中断后续传。SSH 校验已核对的主机密钥，设置连接超时和保活。
+GitHub Actions 验证源码后只打包后端 POM、Dockerfile、构建设置和 `src/main`，上传约 67 KB 的源码包及 SHA-256。不会上传 `.env`、`application-local.yml`、本机 target 或图片。服务器验证归档白名单、路径、校验和与源码 SHA，然后在 Docker 内构建镜像，不在宿主机安装 Maven/Java。
 
-部署分为配置上传、镜像传输、校验加载、启动验收四步。单次 rsync 最多 900 秒，无数据传输最多等待 120 秒，失败最多尝试三次并输出退出码、耗时、进度和传输统计。整个部署 job 为 75 分钟，覆盖最多 45 分钟传输及加载、健康检查和回滚预算。加载前校验归档 SHA-256 与镜像 revision，启动后核对运行容器镜像 ID；API 验证首页响应，admin 验证未登录访问系列接口仍返回 401。系列写入流程只在 CI 的隔离数据库验证。
+服务器使用腾讯云 Maven/JRE 镜像与 Maven 仓库，先按 POM 缓存构建依赖层，再复制源码编译。构建串行执行，限制单次 1 CPU / 1 GiB；开始前要求至少 1536 MiB 可用内存、4 GiB 空闲磁盘。首次建立依赖缓存可能较慢；上传、资源不足或构建失败均不替换运行中的服务。
 
-需要排查传输迟缓时，可手动运行 `deploy-diagnostics` 并填写完整发布 SHA。默认只读取传输进程、归档大小、SSH 计数和健康状态。可选 `registry_pull` 会用当前 job 的短期 token 测试拉取 API 镜像到服务器缓存，凭据目录退出时清理，不重启服务。
+部署分为源码上传、云端构建、启动验收三步。整个部署 job 为 65 分钟，包含最多 40 分钟冷构建和 15 分钟启动检查/回滚预算。镜像沿用 `.env` 中现有仓库前缀和完整 SHA 标签，在服务器本地构建；现有 `ghcr.io/...` 前缀只用于兼容镜像命名，发布不再依赖 GHCR 推拉。默认不向腾讯云 CCR 推送，需要归档时再单独配置夏晨的仓库与凭据。
+
+启动后核对运行容器镜像 ID 与 revision；API 验证首页响应，admin 验证未登录访问系列接口仍返回 401。系列写入流程只在 CI 的隔离数据库验证。SSH 校验主机密钥并设置连接超时与保活。
+
+需要排查历史镜像传输时，可手动运行 `deploy-diagnostics` 并填写完整发布 SHA。默认只读取传输进程、归档大小、SSH 计数和健康状态。可选 `registry_pull` 用当前 job 的短期 token 测试历史 GHCR API 镜像拉取，凭据目录退出时清理，不重启服务。
 
 服务器配置位于 `/home/ubuntu/xiachen-yishe/deploy/.env`，权限 600，模板见 `deploy/.env.example`。
 部署脚本会同步 Compose，并在版本、健康和业务检查成功后记录镜像 SHA。启动或验收失败会尝试恢复上个容器镜像；首次发布失败则停止失败容器。**数据库迁移不自动回滚**，发布破坏性迁移前应备份数据库。

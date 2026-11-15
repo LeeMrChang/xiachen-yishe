@@ -49,56 +49,27 @@ jobs:
           COS_BUCKET: ci-placeholder-1513506595
           COS_KEY_PREFIX: ci
         run: bash deploy/scripts/smoke-test.sh ${{ inputs.module }}
-      - name: Resolve image name
+      - name: Package checked backend source
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/${{ inputs.image }}" >> "$GITHUB_ENV"
-      - uses: docker/login-action@v3
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/setup-buildx-action@v3
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-      - uses: docker/build-push-action@v6
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        with:
-          context: xc
-          file: xc/Dockerfile
-          platforms: linux/amd64
-          push: true
-          build-args: MODULE=${{ inputs.module }}
-          labels: |
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-          tags: |
-            ${{ env.IMAGE }}:${{ github.sha }}
-            ${{ env.IMAGE }}:latest
-      - name: Package deployment image
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        run: |
-          docker pull "${{ env.IMAGE }}:${{ github.sha }}"
-          docker save "${{ env.IMAGE }}:${{ github.sha }}" | gzip -1 > image.tar.gz
+        run: python3 deploy/scripts/backend-source.py pack "$RUNNER_TEMP/deployment-source" "$GITHUB_SHA"
       - uses: actions/upload-artifact@v4
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         with:
-          name: image-${{ inputs.service }}
-          path: image.tar.gz
-          compression-level: 0
+          name: source-${{ inputs.service }}
+          path: ${{ runner.temp }}/deployment-source/source.tar.gz*
           retention-days: 7
   deploy:
     needs: build
     if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    # 45m transfer + 5m setup + 5m load + 15m activation/rollback + 5m margin.
-    timeout-minutes: 75
+    # 4m source upload + 40m cold cloud build + 15m activation/rollback + margin.
+    timeout-minutes: 65
     concurrency:
       # Each caller permits one active release: at most API + admin reach this group.
       group: xiachen-backend-production
       cancel-in-progress: false
     permissions:
       contents: read
-      packages: read
     env:
       DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
@@ -112,14 +83,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: image-${{ inputs.service }}
-          path: ${{ runner.temp }}/deployment-image
-      - name: Prepare SSH and upload deployment configuration
+          name: source-${{ inputs.service }}
+          path: ${{ runner.temp }}/deployment-source
+      - name: Upload checked source and deployment configuration
         run: bash deploy/scripts/backend-release.sh prepare
-      - name: Transfer image with compression and resumable delta updates
-        run: bash deploy/scripts/backend-release.sh upload
-      - name: Verify archive and load target image
-        run: bash deploy/scripts/backend-release.sh load
+      - name: Build target image on server through domestic mirrors
+        run: bash deploy/scripts/backend-release.sh build
       - name: Activate service and verify version and business endpoints
         run: bash deploy/scripts/backend-release.sh activate
       - name: Remove temporary SSH key

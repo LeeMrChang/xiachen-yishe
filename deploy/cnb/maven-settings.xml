@@ -1,0 +1,9 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0">
+  <mirrors>
+    <mirror>
+      <id>tencent-public</id>
+      <mirrorOf>central</mirrorOf>
+      <url>https://mirrors.cloud.tencent.com/nexus/repository/maven-public/</url>
+    </mirror>
+  </mirrors>
+</settings>

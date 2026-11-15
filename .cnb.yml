@@ -1,0 +1,22 @@
+# GitHub runs tests first and explicitly triggers this private mirror.
+# A push alone never publishes or deploys a release.
+main:
+  api_trigger:
+    - name: publish-image
+      runner:
+        tags: cnb:arch:amd64
+        cpus: 2
+      docker:
+        image: docker:27-cli
+      services:
+        - docker
+      stages:
+        - name: Package Java 21 application
+          image: maven:3.9-eclipse-temurin-21
+          script: |
+            set -eu
+            case "$MODULE" in xc-api|xc-admin) ;; *) exit 1;; esac
+            test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+            mvn -B -ntp -s deploy/cnb/maven-settings.xml -f xc/pom.xml -pl "$MODULE" -am -DskipTests package
+        - name: Build and push image within China
+          script: sh deploy/cnb/publish.sh

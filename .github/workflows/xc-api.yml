@@ -12,6 +12,8 @@ on:
       - 'xc/.dockerignore'
       - 'deploy/docker-compose.yml'
       - 'deploy/scripts/**'
+      - 'deploy/cnb/**'
+      - '.cnb.yml'
       - '.github/workflows/_backend.yml'
       - '.github/workflows/xc-api.yml'
   pull_request:
@@ -24,6 +26,8 @@ on:
       - 'xc/.dockerignore'
       - 'deploy/docker-compose.yml'
       - 'deploy/scripts/**'
+      - 'deploy/cnb/**'
+      - '.cnb.yml'
       - '.github/workflows/_backend.yml'
       - '.github/workflows/xc-api.yml'
   workflow_dispatch:

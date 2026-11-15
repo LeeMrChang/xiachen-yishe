@@ -16,7 +16,7 @@ main 分支按路径触发 GitHub Actions：
 
 | 工作流 | 行为 |
 | --- | --- |
-| xc-api / xc-admin | TCR 登录校验 → Java verify → 隔离 MySQL/Redis 业务测试 → CI 构建并推送 TCR → 服务器按摘要拉取与验收 |
+| xc-api / xc-admin | Java verify → 隔离 MySQL/Redis 业务测试 → CNB 国内临时机器构建并推送 TCR → 服务器按摘要拉取与验收 |
 | web | npm ci、类型检查和构建 → 静态文件上传 → 原子切换 current 链接 |
 | miniprogram | JavaScript/JSON 校验；不自动上传微信、不自动提审 |
 | scripts | 录入脚本语法与数据引用校验、失败退出测试、部署传输与回滚测试 |
@@ -36,11 +36,13 @@ main 分支按路径触发 GitHub Actions：
 ### GitHub 配置
 
 Variables：`DEPLOY_ENABLED`、`TCR_IMAGE_REPO=ccr.ccs.tencentyun.com/leemrchang-xiachen-yishe`、`TCR_USERNAME`。
-Secrets：`DEPLOY_SSH_KEY`、`DEPLOY_KNOWN_HOSTS`、`DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_PATH`、`DEPLOY_WEB_ROOT`、`TCR_PASSWORD`。
+Secrets：`DEPLOY_SSH_KEY`、`DEPLOY_KNOWN_HOSTS`、`DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_PATH`、`DEPLOY_WEB_ROOT`、`TCR_PASSWORD`、`CNB_TOKEN`。
+
+`CNB_TOKEN` 仅授权私有仓库 `leemrchang-ci/xiachen-builder`：`repo-code` 读写、`repo-cnb-trigger` 读写、`repo-cnb-history` 只读。GitHub 是源码主仓库，测试通过后将同一提交同步到 CNB，并按 SHA 触发 `api_trigger`；普通推送不启动 CNB 发布。CNB 使用独立的 2 CPU amd64 临时构建节点，不占用生产服务器编译资源。未配置付费预算绑定；免费额度耗尽时需检查 CNB 配额。
 
 两个私有镜像仓库为 `ccr.ccs.tencentyun.com/leemrchang-xiachen-yishe/xc-api`、`xc-admin`。`TCR_PASSWORD` 是 TCR 仓库登录密码，与云服务器登录密码不同。已有个人版凭据可用于夏晨；修改 TCR 密码时需要同步维护使用该凭据的其他项目。
 
-GitHub Actions 先验证 TCR 登录，随后编译 JAR、运行隔离数据库冒烟测试、构建 linux/amd64 镜像并推送完整源码 SHA 标签。发布使用推送结果的 `@sha256:...` 不可变摘要，不依赖 `latest`。生产服务器只同步部署配置、登录 TCR、拉取和启动镜像，不上传镜像归档，也不在服务器编译 Java 或构建 Docker 镜像。
+GitHub Actions 编译 JAR、运行隔离数据库冒烟测试后，由 CNB 使用 Java 21 和腾讯 Maven 镜像打包、构建 linux/amd64 镜像并推送完整源码 SHA 标签。长期 TCR 密码仅保存在 GitHub；GitHub 向 TCR 申请单个镜像仓库的临时 pull/push 令牌，随构建变量交给 CNB，构建脚本不输出凭据。CNB 构建失败时不执行部署。发布重新读取并核验 TCR manifest 的 `@sha256:...` 不可变摘要，不依赖 `latest`。生产服务器只同步部署配置、登录 TCR、拉取和启动镜像，不上传镜像归档，也不在服务器编译 Java 或构建 Docker 镜像。
 
 服务器拉取使用独立的临时 Docker 凭据目录，成功或失败退出时清理，不修改宿主机默认登录配置。拉取后检查镜像 revision，启动后核对运行容器镜像 ID；API 验证首页响应，admin 验证未登录访问系列接口仍返回 401。系列写入流程只在 CI 的隔离数据库验证。SSH 校验主机密钥并设置连接超时与保活。
 

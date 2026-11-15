@@ -46,7 +46,15 @@ Secrets：`DEPLOY_SSH_KEY`、`DEPLOY_KNOWN_HOSTS`、`DEPLOY_HOST`、`DEPLOY_USER
 
 ## 数据迁移
 
-Flyway 正式路径 `classpath:db/migration`；演示迁移仅 local 加载 `db/demo`。新增变更追加新版本，禁止修改已执行的历史 SQL。
+Flyway 按环境隔离迁移，API 与管理服务保持一致：
+
+- 共用结构：`classpath:db/migration`。
+- 生产默认：`db/migration` + `db/production`；生产 V7 清理门店本机封面地址。
+- 本地 local：`db/migration` + `db/demo`；保留已执行的演示 V4、V7、V8。
+
+历史上生产和演示各有一个 V7，不能同时扫描 `db/production` 与 `db/demo`。已执行脚本的版本、文件名和 SQL 内容保持不变，不手改迁移记录。后续共用迁移从 **V9** 起统一分配版本号，并同时检查两套路径是否重号。
+CI 会通过 `python3 deploy/scripts/check-migrations.py` 同时检查生产、本地两套迁移的版本唯一性。
+修改迁移资源位置后，运行 `mvn -f xc/pom.xml clean verify`，清除 target 中旧路径的资源。
 CI 通过全新数据库启动验证迁移，并断言生产 profile 商品列表为空，避免演示数据进入生产。
 
 ## 验证与回滚

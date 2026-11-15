@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # CI-only isolated database; no production credentials or data.
 set -euo pipefail
+python3 "$(dirname "$0")/check-migrations.py"
 module=${1:?xc-api or xc-admin}
 case "$module" in xc-api|xc-admin) ;; *) exit 1;; esac
 log=$(mktemp)

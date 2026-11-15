@@ -13,7 +13,7 @@ trap 'rm -rf "$DOCKER_CONFIG"' EXIT
 printf '%s' "$DOCKER_AUTH_B64" | base64 -d > "$DOCKER_CONFIG/config.json"
 chmod 600 "$DOCKER_CONFIG/config.json"
 unset DOCKER_AUTH_B64
-docker build --build-arg "MODULE=$MODULE" \
+docker build --provenance=false --build-arg "MODULE=$MODULE" \
   --label "org.opencontainers.image.revision=$SOURCE_SHA" \
   --label 'org.opencontainers.image.source=https://github.com/LeeMrChang/xiachen-yishe' \
   -t "$IMAGE:$SOURCE_SHA" -f xc/Dockerfile xc

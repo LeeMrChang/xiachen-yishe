@@ -17,6 +17,18 @@ spec.loader.exec_module(cnb)
 
 
 class CNBReleaseTest(unittest.TestCase):
+    def test_manifest_accepts_index_and_retries_visibility_delay(self):
+        raw = b'{"schemaVersion":2,"manifests":[]}'
+        digest = "sha256:" + hashlib.sha256(raw).hexdigest()
+        with patch.object(cnb, "request", side_effect=[cnb.HTTPFailure(cnb.REGISTRY, 404), (raw, {"Docker-Content-Digest": digest})]) as req, patch.object(cnb.time, "sleep"):
+            self.assertEqual(cnb.manifest_digest("namespace/xc-api", "a" * 40, "temporary"), digest)
+            self.assertIn("application/vnd.oci.image.index.v1+json", req.call_args.kwargs["headers"]["Accept"])
+
+    def test_manifest_digest_mismatch_is_rejected(self):
+        with patch.object(cnb, "request", return_value=(b"tampered", {"Docker-Content-Digest": "sha256:" + "0" * 64})):
+            with self.assertRaisesRegex(RuntimeError, "digest mismatch"):
+                cnb.manifest_digest("namespace/xc-api", "a" * 40, "temporary")
+
     def test_registry_scope_and_no_password_in_trigger(self):
         headers = {"WWW-Authenticate": 'Bearer realm="https://ccr.ccs.tencentyun.com/service/token",service="token-service"'}
         challenge = urllib.error.HTTPError("url", 401, "private", headers, None)

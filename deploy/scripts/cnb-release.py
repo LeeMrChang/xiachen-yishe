@@ -30,6 +30,12 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 HTTP = urllib.request.build_opener(NoRedirect)
 
 
+class HTTPFailure(RuntimeError):
+    def __init__(self, host, status):
+        self.status = status
+        super().__init__(f"{host}: HTTP {status}")
+
+
 def request(url, *, token=None, data=None, headers=None):
     hdr = dict(headers or {})
     if token:
@@ -43,7 +49,29 @@ def request(url, *, token=None, data=None, headers=None):
             return response.read(), response.headers
     except urllib.error.HTTPError as exc:
         # The remote body can echo build variables, so deliberately omit it.
-        raise RuntimeError(f"{urllib.parse.urlparse(url).hostname}: HTTP {exc.code}") from None
+        raise HTTPFailure(urllib.parse.urlparse(url).hostname, exc.code) from None
+
+
+def manifest_digest(repository, sha, token):
+    accept = ", ".join([
+        "application/vnd.docker.distribution.manifest.v2+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+        "application/vnd.oci.image.manifest.v1+json",
+        "application/vnd.oci.image.index.v1+json",
+    ])
+    for attempt in range(12):
+        try:
+            raw, headers = request(f"https://{REGISTRY}/v2/{repository}/manifests/{sha}",
+                                   token=token, headers={"Accept": accept})
+            break
+        except HTTPFailure as exc:
+            if exc.status != 404 or attempt == 11:
+                raise
+            time.sleep(5)
+    digest = "sha256:" + hashlib.sha256(raw).hexdigest()
+    if headers.get("Docker-Content-Digest") != digest:
+        raise RuntimeError("TCR manifest digest mismatch")
+    return digest
 
 
 def registry_token(repository, username, password):
@@ -134,11 +162,7 @@ def main():
         raise
     # Refresh the token before reading the immutable result.
     read_token = registry_token(repository, os.environ["TCR_USERNAME"], os.environ["TCR_PASSWORD"])
-    raw, headers = request(f"https://{REGISTRY}/v2/{repository}/manifests/{sha}", token=read_token,
-                           headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json"})
-    digest = "sha256:" + hashlib.sha256(raw).hexdigest()
-    if headers.get("Docker-Content-Digest") != digest:
-        raise RuntimeError("TCR manifest digest mismatch")
+    digest = manifest_digest(repository, sha, read_token)
     with open(os.environ["GITHUB_OUTPUT"], "a") as output:
         output.write(f"image_ref={image}@{digest}\n")
     print(f"Published {image}@{digest}")

@@ -22,5 +22,6 @@ else
   code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18099/api/admin/products)
   [ "$code" = 401 ]
   curl -fsS -H 'Content-Type: application/json' -d '{"username":"admin","password":"ci-admin-only"}' http://127.0.0.1:18099/api/admin/auth/login | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["code"]==0 and d["data"]["token"]'
+  python3 "$(dirname "$0")/smoke-collections.py"
 fi
 echo "$module smoke test passed: Flyway, health and business/auth endpoints"

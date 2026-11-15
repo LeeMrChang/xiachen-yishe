@@ -14,6 +14,18 @@ on:
       - 'deploy/scripts/**'
       - '.github/workflows/_backend.yml'
       - '.github/workflows/xc-api.yml'
+  pull_request:
+    paths:
+      - 'xc/xc-api/**'
+      - 'xc/xc-common/**'
+      - 'xc/xc-domain/**'
+      - 'xc/pom.xml'
+      - 'xc/Dockerfile'
+      - 'xc/.dockerignore'
+      - 'deploy/docker-compose.yml'
+      - 'deploy/scripts/**'
+      - '.github/workflows/_backend.yml'
+      - '.github/workflows/xc-api.yml'
   workflow_dispatch:
 
 concurrency:

@@ -1,0 +1,28 @@
+name: scripts
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/**', 'deploy/scripts/**', 'deploy/tests/**', '.github/workflows/scripts.yml']
+  pull_request:
+    paths: ['scripts/**', 'deploy/scripts/**', 'deploy/tests/**', '.github/workflows/scripts.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax and storefront references
+        run: |
+          for script in scripts/*.mjs; do node --check "$script"; done
+          node scripts/check-storefront.mjs
+          node --test scripts/tests/*.test.mjs
+      - name: Check deployment scripts and failure handling
+        run: |
+          for script in deploy/scripts/*.sh; do bash -n "$script"; done
+          python3 -m unittest discover -s deploy/tests -p 'test_*.py'

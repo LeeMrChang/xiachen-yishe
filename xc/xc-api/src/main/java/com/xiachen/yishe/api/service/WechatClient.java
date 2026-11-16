@@ -1,6 +1,8 @@
 package com.xiachen.yishe.api.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xiachen.yishe.api.config.WechatProperties;
 import com.xiachen.yishe.common.exception.BizException;
 import com.xiachen.yishe.common.exception.ErrorCode;
@@ -16,10 +18,12 @@ public class WechatClient {
 
     private final RestClient restClient;
     private final WechatProperties properties;
+    private final ObjectMapper objectMapper;
 
-    public WechatClient(RestClient wechatRestClient, WechatProperties properties) {
+    public WechatClient(RestClient wechatRestClient, WechatProperties properties, ObjectMapper objectMapper) {
         this.restClient = wechatRestClient;
         this.properties = properties;
+        this.objectMapper = objectMapper;
     }
 
     public Session code2Session(String appid, String code) {
@@ -36,7 +40,9 @@ public class WechatClient {
         }
         SessionResponse response;
         try {
-            response = restClient.get()
+            // WeChat also serves JSON as text/plain. Read the body independently
+            // of its media type, then validate it with the application JSON mapper.
+            String body = restClient.get()
                     .uri(builder -> builder.scheme("https").host("api.weixin.qq.com")
                             .path("/sns/jscode2session")
                             .queryParam("appid", appid)
@@ -45,15 +51,18 @@ public class WechatClient {
                             .queryParam("grant_type", "authorization_code")
                             .build())
                     .retrieve()
-                    .body(SessionResponse.class);
+                    .body(String.class);
+            response = body == null || body.isBlank() ? null : objectMapper.readValue(body, SessionResponse.class);
         } catch (Exception e) {
-            log.warn("jscode2session request failed, appid={}", appid, e);
+            // HTTP exceptions may contain the request URL (AppSecret + code),
+            // and JSON exceptions may contain the session response. Log neither.
+            log.warn("jscode2session request failed, appid={} exception={}", appid, e.getClass().getSimpleName());
             throw new BizException(ErrorCode.WX_LOGIN_FAILED);
         }
-        if (response == null || response.openid() == null || response.openid().isBlank()) {
-            log.warn("jscode2session rejected, appid={} errcode={} errmsg={}", appid,
-                    response == null ? null : response.errcode(),
-                    response == null ? null : response.errmsg());
+        if (response == null || (response.errcode() != null && response.errcode() != 0)
+                || response.openid() == null || response.openid().isBlank()) {
+            log.warn("jscode2session rejected, appid={} errcode={}", appid,
+                    response == null ? null : response.errcode());
             throw new BizException(ErrorCode.WX_LOGIN_FAILED);
         }
         return new Session(response.openid(), response.unionid());
@@ -62,6 +71,7 @@ public class WechatClient {
     public record Session(String openid, String unionid) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record SessionResponse(String openid,
                                    @JsonProperty("session_key") String sessionKey,
                                    String unionid,

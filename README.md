@@ -31,7 +31,7 @@ main 分支按路径触发 GitHub Actions：
 - 两容器连接现有外部网络 `cost-cloud_default`，通过容器 DNS 访问 MySQL/Redis；不开放数据库公网端口。
 - 独立数据库/账号 `xiachen_yishe`；Redis DB 2，`xc:` 缓存前缀。
 - API 与 admin 使用不同 JWT 签名密钥，防止身份令牌互通。
-- COS 使用 `prod/`；生产关闭 WX_MOCK。当前 cost AppID 仅供体验版，不提审、不替换 cost 已发布版本。
+- COS 使用 `prod/`；生产关闭 WX_MOCK。夏晨小程序 AppID 为 `wxc790fc208f0660c4`；生产登录需配置对应的 `WX_APPID_XC` 与 `WX_SECRET_XC`。
 
 ### GitHub 配置
 

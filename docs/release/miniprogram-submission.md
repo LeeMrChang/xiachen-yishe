@@ -8,7 +8,7 @@
 
 | 检查项 | 要求 | 当前状态 |
 | --- | --- | --- |
-| 小程序 AppID | 换成品牌主体的正式 AppID，`project.config.json` 与 `xc-api` 的 `wechat.apps` 一致 | 待确认（当前配置文件为开发 AppID） |
+| 小程序 AppID | `wxc790fc208f0660c4`，`project.config.json` 与 `xc-api` 的 `wechat.apps` 一致 | 工程及后端默认值已更新；生产需配置对应的 `WX_APPID_XC` / `WX_SECRET_XC` |
 | 服务器域名 | `request` 合法域名填 `https://xc-api.xiachen.xyz`（不要带端口/路径） | 待配置 |
 | HTTPS / 证书 | Caddy 已自动签发，确认两张证书有效期 | 进行中 |
 | 图片域名 | `img.xiachen.xyz` 完成 COS 自定义域名与证书，替换种子图/上传图前缀 | 待办 |

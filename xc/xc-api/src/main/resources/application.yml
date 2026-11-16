@@ -47,7 +47,7 @@ wechat:
     - appid: ${WX_APPID_COST:}
       secret: ${WX_SECRET_COST:}
       label: cost
-    - appid: ${WX_APPID_XC:}
+    - appid: ${WX_APPID_XC:wxc790fc208f0660c4}
       secret: ${WX_SECRET_XC:}
       label: xiachen
 

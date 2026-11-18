@@ -16,6 +16,7 @@ on:
       - '.cnb.yml'
       - '.github/workflows/_backend.yml'
       - '.github/workflows/xc-api.yml'
+      - 'scripts/ci-plan.py'
   pull_request:
     paths:
       - 'xc/xc-api/**'
@@ -30,7 +31,13 @@ on:
       - '.cnb.yml'
       - '.github/workflows/_backend.yml'
       - '.github/workflows/xc-api.yml'
+      - 'scripts/ci-plan.py'
   workflow_dispatch:
+    inputs:
+      full:
+        description: 'Explicitly allow an API deployment after checks'
+        type: boolean
+        default: false
 
 concurrency:
   group: xc-api-${{ github.ref }}
@@ -46,4 +53,5 @@ jobs:
       image: xc-api
       service: xc-api
       tag_var: XC_API_TAG
+      full: ${{ inputs.full || false }}
     secrets: inherit

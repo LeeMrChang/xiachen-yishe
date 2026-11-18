@@ -6,12 +6,14 @@ on:
       image: {required: true, type: string}
       service: {required: true, type: string}
       tag_var: {required: true, type: string}
+      full: {required: false, type: boolean, default: false}
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     outputs:
       image_ref: ${{ steps.reference.outputs.image_ref }}
+      deployment_required: ${{ steps.plan.outputs.deployment_required }}
     services:
       mysql:
         image: mysql:8.4
@@ -30,6 +32,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Detect deployment changes
+        id: plan
+        env:
+          TARGET: ${{ inputs.module }}
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          BASE_REF: ${{ github.base_ref }}
+          FULL: ${{ inputs.full }}
+        run: |
+          args=()
+          if [[ "$FULL" == true ]]; then args+=(--full); fi
+          python3 scripts/ci-plan.py --target "$TARGET" --event "$EVENT" --before "$BEFORE" --base-ref "$BASE_REF" "${args[@]}"
       - name: Validate deployment scripts and Compose migration
         run: python3 -m unittest discover -s deploy/tests -p 'test_*.py'
       - uses: actions/setup-java@v4
@@ -57,7 +71,7 @@ jobs:
         run: bash deploy/scripts/smoke-test.sh ${{ inputs.module }}
       - name: Build and publish on independent domestic CNB runner
         id: reference
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.plan.outputs.deployment_required == 'true'
         env:
           CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
           TCR_USERNAME: ${{ vars.TCR_USERNAME }}
@@ -66,7 +80,7 @@ jobs:
         run: python3 deploy/scripts/cnb-release.py
   deploy:
     needs: build
-    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.build.outputs.deployment_required == 'true'
     runs-on: ubuntu-latest
     # Configuration + bounded TCR pull + version/health checks and rollback.
     timeout-minutes: 35

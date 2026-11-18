@@ -16,6 +16,7 @@ on:
       - '.cnb.yml'
       - '.github/workflows/_backend.yml'
       - '.github/workflows/xc-admin.yml'
+      - 'scripts/ci-plan.py'
   pull_request:
     paths:
       - 'xc/xc-admin/**'
@@ -30,7 +31,13 @@ on:
       - '.cnb.yml'
       - '.github/workflows/_backend.yml'
       - '.github/workflows/xc-admin.yml'
+      - 'scripts/ci-plan.py'
   workflow_dispatch:
+    inputs:
+      full:
+        description: 'Explicitly allow an admin deployment after checks'
+        type: boolean
+        default: false
 
 concurrency:
   group: xc-admin-${{ github.ref }}
@@ -46,4 +53,5 @@ jobs:
       image: xc-admin
       service: xc-admin
       tag_var: XC_ADMIN_TAG
+      full: ${{ inputs.full || false }}
     secrets: inherit

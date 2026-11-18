@@ -2,10 +2,15 @@ name: web
 on:
   push:
     branches: [main]
-    paths: ['web/**', '.github/workflows/web.yml', 'deploy/scripts/deploy-web.sh']
+    paths: ['web/**', '.github/workflows/web.yml', 'deploy/scripts/deploy-web.sh', 'scripts/ci-plan.py']
   pull_request:
-    paths: ['web/**', '.github/workflows/web.yml']
+    paths: ['web/**', '.github/workflows/web.yml', 'deploy/scripts/deploy-web.sh', 'scripts/ci-plan.py']
   workflow_dispatch:
+    inputs:
+      full:
+        description: 'Explicitly allow a Web deployment after checks'
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -13,6 +18,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
+    outputs:
+      deployment_required: ${{ steps.plan.outputs.deployment_required }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -20,6 +27,20 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect deployment changes
+        id: plan
+        working-directory: .
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          BASE_REF: ${{ github.base_ref }}
+          FULL: ${{ inputs.full || false }}
+        run: |
+          args=()
+          if [[ "$FULL" == true ]]; then args+=(--full); fi
+          python3 scripts/ci-plan.py --target web --event "$EVENT" --before "$BEFORE" --base-ref "$BASE_REF" "${args[@]}"
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -34,7 +55,7 @@ jobs:
           retention-days: 7
   deploy:
     needs: build
-    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main'
+    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.build.outputs.deployment_required == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

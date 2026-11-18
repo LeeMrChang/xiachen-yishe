@@ -21,6 +21,8 @@ main 分支按路径触发 GitHub Actions：
 | miniprogram | JavaScript/JSON 校验；不自动上传微信、不自动提审 |
 | scripts | 录入脚本语法与数据引用校验、失败退出测试、部署传输与回滚测试 |
 
+CI 检查和部署资格分别判断。仅修改测试代码、测试目录数据、文档、README 或 CI 规划配置时，继续运行对应检查，但不发布 CNB/TCR 镜像、不部署 Java 服务或管理网页；文档与 README 变化由 scripts 工作流检查。Web 仍会构建校验，不能把 CI 构建产物等同生产发布。运行代码、依赖、迁移和部署输入变化保留原来的发布范围。无法识别本次 push 的前置提交时只检查；手动运行 API、admin 或 Web 工作流并勾选 `full=true` 可明确要求部署。PR 始终不部署。
+
 共享模块、Compose、部署脚本变更会同时发布两个后端。部署 job 仅在 `DEPLOY_ENABLED=true` 且 main 分支执行。
 后端 PR 执行构建与隔离数据库冒烟测试，不推送镜像、不部署。两个服务并行构建，生产部署共用 `xiachen-backend-production` 并发组，从上传开始串行执行，不取消正在发布的服务。每个服务同一分支只允许一个活跃发布；连续推送时，GitHub 默认保留最新的待执行工作流。
 

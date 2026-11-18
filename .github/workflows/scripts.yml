@@ -2,9 +2,9 @@ name: scripts
 on:
   push:
     branches: [main]
-    paths: ['scripts/**', 'deploy/scripts/**', 'deploy/tests/**', '.github/workflows/scripts.yml']
+    paths: ['scripts/**', 'deploy/scripts/**', 'deploy/tests/**', 'docs/**', 'README*', '.github/workflows/scripts.yml']
   pull_request:
-    paths: ['scripts/**', 'deploy/scripts/**', 'deploy/tests/**', '.github/workflows/scripts.yml']
+    paths: ['scripts/**', 'deploy/scripts/**', 'deploy/tests/**', 'docs/**', 'README*', '.github/workflows/scripts.yml']
   workflow_dispatch:
 permissions:
   contents: read

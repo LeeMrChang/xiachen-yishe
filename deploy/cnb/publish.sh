@@ -15,6 +15,6 @@ chmod 600 "$DOCKER_CONFIG/config.json"
 unset DOCKER_AUTH_B64
 docker build --provenance=false --build-arg "MODULE=$MODULE" \
   --label "org.opencontainers.image.revision=$SOURCE_SHA" \
-  --label 'org.opencontainers.image.source=https://github.com/LeeMrChang/xiachen-yishe' \
+  --label 'org.opencontainers.image.source=https://github.com/leech-io/xiachen-yishe' \
   -t "$IMAGE:$SOURCE_SHA" -f xc/Dockerfile xc
 docker push "$IMAGE:$SOURCE_SHA"

@@ -26,3 +26,6 @@ uploads/
 .idea/
 .vscode/
 .DS_Store
+
+# Qoder CLI 本机权限规则（机器本地，不共享）
+.qoder/settings.local.json

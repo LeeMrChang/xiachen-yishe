@@ -1,5 +1,7 @@
 # 夏晨衣舍
 
+> 公开文档脱敏说明（2026-11-18）：个人路径、私有需求链接及云资源标识已省略或改为占位示例。历史验证结论保留，不代表使用占位示例重新执行。示例路径使用前须替换；部署脚本的内置默认路径以源码为准，本次未调整脚本。
+
 三家深圳女装实体门店的微信小程序与店长管理后台，不做线上交易。
 
 ## 本地开发
@@ -30,19 +32,19 @@ CI 检查和部署资格分别判断。仅修改测试代码、测试目录数�
 
 - Caddy `xc-api.xiachen.xyz` → 宿主机回环 18091 → xc-api 容器 8081。
 - Caddy `admin.xiachen.xyz` 的 `/api/*` → 回环 18092 → xc-admin 容器 8082；其他路径读取静态网页。
-- 两容器连接现有外部网络 `cost-cloud_default`，通过容器 DNS 访问 MySQL/Redis；不开放数据库公网端口。
+- 两容器通过受控的外部 Docker 网络访问 MySQL/Redis，不开放数据库公网端口；网络名称以 `deploy/docker-compose.yml` 的实际配置为准，此处不公开与其他项目共享的部署关系。
 - 独立数据库/账号 `xiachen_yishe`；Redis DB 2，`xc:` 缓存前缀。
 - API 与 admin 使用不同 JWT 签名密钥，防止身份令牌互通。
 - COS 使用 `prod/`；生产关闭 WX_MOCK。夏晨小程序 AppID 为 `wxc790fc208f0660c4`；生产登录需配置对应的 `WX_APPID_XC` 与 `WX_SECRET_XC`。
 
 ### GitHub 配置
 
-Variables：`DEPLOY_ENABLED`、`TCR_IMAGE_REPO=ccr.ccs.tencentyun.com/leemrchang-xiachen-yishe`、`TCR_USERNAME`。
+Variables：`DEPLOY_ENABLED`、`TCR_IMAGE_REPO`（设为自己的 TCR 仓库前缀）、`TCR_USERNAME`。
 Secrets：`DEPLOY_SSH_KEY`、`DEPLOY_KNOWN_HOSTS`、`DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_PATH`、`DEPLOY_WEB_ROOT`、`TCR_PASSWORD`、`CNB_TOKEN`。
 
-`CNB_TOKEN` 仅授权私有仓库 `leemrchang-ci/xiachen-builder`：`repo-code` 读写、`repo-cnb-trigger` 读写、`repo-cnb-history` 只读。GitHub 是源码主仓库，测试通过后将同一提交同步到 CNB，并按 SHA 触发 `api_trigger`；普通推送不启动 CNB 发布。CNB 使用独立的 2 CPU amd64 临时构建节点，不占用生产服务器编译资源。未配置付费预算绑定；免费额度耗尽时需检查 CNB 配额。
+`CNB_TOKEN` 仅授权专用私有构建仓库（名称省略）：`repo-code` 读写、`repo-cnb-trigger` 读写、`repo-cnb-history` 只读。GitHub 是源码主仓库，测试通过后将同一提交同步到 CNB，并按 SHA 触发 `api_trigger`；普通推送不启动 CNB 发布。CNB 使用独立的 2 CPU amd64 临时构建节点，不占用生产服务器编译资源。未配置付费预算绑定；免费额度耗尽时需检查 CNB 配额。
 
-两个私有镜像仓库为 `ccr.ccs.tencentyun.com/leemrchang-xiachen-yishe/xc-api`、`xc-admin`。`TCR_PASSWORD` 是 TCR 仓库登录密码，与云服务器登录密码不同。已有个人版凭据可用于夏晨；修改 TCR 密码时需要同步维护使用该凭据的其他项目。
+两个私有镜像仓库为 `${TCR_IMAGE_REPO}/xc-api`、`${TCR_IMAGE_REPO}/xc-admin`。`TCR_PASSWORD` 是 TCR 仓库登录密码，与云服务器登录密码不同。修改 TCR 密码时，应同步维护所有使用该凭据的服务。
 
 GitHub Actions 编译 JAR、运行隔离数据库冒烟测试后，由 CNB 使用 Java 21 和腾讯 Maven 镜像打包、构建 linux/amd64 镜像并推送完整源码 SHA 标签。长期 TCR 密码仅保存在 GitHub；GitHub 向 TCR 申请单个镜像仓库的临时 pull/push 令牌，随构建变量交给 CNB，构建脚本不输出凭据。CNB 构建失败时不执行部署。发布重新读取并核验 TCR manifest 的 `@sha256:...` 不可变摘要，不依赖 `latest`。生产服务器只同步部署配置、登录 TCR、拉取和启动镜像，不上传镜像归档，也不在服务器编译 Java 或构建 Docker 镜像。
 
@@ -52,11 +54,11 @@ GitHub Actions 编译 JAR、运行隔离数据库冒烟测试后，由 CNB 使�
 
 需要排查历史归档传输时，可手动运行 `deploy-diagnostics`。默认只读取传输进程、归档大小、SSH 计数和健康状态；可选 `registry_pull` 仅用于历史 GHCR API 镜像测试。
 
-服务器配置位于 `/home/ubuntu/xiachen-yishe/deploy/.env`，权限 600，模板见 `deploy/.env.example`。
+服务器配置位于 `${DEPLOY_PATH}/deploy/.env`，权限 600，模板见 `deploy/.env.example`。
 部署脚本会同步 Compose，并在版本、健康和业务检查成功后记录镜像 SHA。启动或验收失败会尝试恢复上个容器镜像；首次发布失败则停止失败容器。**数据库迁移不自动回滚**，发布破坏性迁移前应备份数据库。
 
 管理网页使用 `releases/<sha>` 与相对 `current` 软链接；不使用 rsync --delete 覆盖现有公共网站。
-共享 Caddy 当前挂载的站点目录变更时，需要相应更新 `DEPLOY_WEB_ROOT` 和网关挂载；不要让其他项目发布删除夏晨衣舍目录。
+Caddy 挂载的站点目录变更时，需要相应更新 `DEPLOY_WEB_ROOT` 和网关挂载；不要让其他项目发布删除夏晨衣舍目录。
 
 ## 数据迁移
 

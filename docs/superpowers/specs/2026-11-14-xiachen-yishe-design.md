@@ -1,9 +1,11 @@
 # 夏晨衣舍 · 开发设计文档
 
+> 公开文档脱敏说明（2026-11-18）：个人路径、私有需求链接及云资源标识已省略或改为占位示例。历史验证结论保留，不代表使用占位示例重新执行。示例路径使用前须替换；部署脚本的内置默认路径以源码为准，本次未调整脚本。
+
 - 版本：v0.5
 - 日期：2026-11-14
 - 状态：待评审
-- 关联需求：[夏晨衣舍女装 · 微信小程序 需求明细 v0.6](https://app.notion.com/p/418a36e1ae8a81f3b57df85ba430b267)
+- 关联需求：夏晨衣舍女装 · 微信小程序 需求明细 v0.6（私有需求页链接已省略）
 - 原型：Ardot 高保真原型（14 屏，我的预约原型待补）
 - 同步说明：本文件与 Notion 开发设计文档 v0.3 内容一致，Notion 为评审入口
 
@@ -108,7 +110,7 @@
 | 语言 | Java 21 (LTS) | 虚拟线程用于 I/O 密集接口 |
 | 框架 | Spring Boot 3.4 | Web、Validation、Actuator |
 | ORM | MyBatis-Plus | SQL 可控，库存与列表查询直观 |
-| 数据库 | MySQL 8+ | 复用 `cost-cloud-mysql`，新库 `xiachen_yishe` |
+| 数据库 | MySQL 8+ | 复用共享 MySQL 实例，新库 `xiachen_yishe` |
 | 缓存 | Redis 6+ | 复用实例，db2 / db3 + 前缀 + ACL |
 | 迁移 | Flyway | 显式版本，禁止手工改表 |
 | 鉴权 | JWT（C 端 + 后台）、RBAC（后台） | 微信登录换取 token |
@@ -376,7 +378,7 @@ Redis 实例级设置：`maxmemory 512mb`、`maxmemory-policy volatile-lru`、�
 ## 9. 图片与上传
 
 - 上传入口 `POST /api/admin/uploads`（multipart），后端校验格式与尺寸后写入腾讯云 COS；浏览器无需直连存储
-- 桶 `xiachenchen-images-1513506595`，地域 `ap-guangzhou`，对象键 `{COS_KEY_PREFIX}/yyyyMM/{uuid}.jpg`
+- 桶名示例 `example-images-1234567890`（实际值由 `COS_BUCKET` 配置），地域 `ap-guangzhou`，对象键 `{COS_KEY_PREFIX}/yyyyMM/{uuid}.jpg`
 - 同一桶按环境分目录：本地 `dev/`，生产 `prod/`（`COS_KEY_PREFIX` 必须显式配置，缺失启动即失败）；已有的演示/测试图片仍在历史 `uploads/` 目录下
 - 对外地址 = `COS_PUBLIC_BASE` + 键，生产为 `https://img.xiachen.xyz`
 - 上传时对象 ACL 设为公有读；存储桶保持私有写
@@ -392,7 +394,7 @@ Redis 实例级设置：`maxmemory 512mb`、`maxmemory-policy volatile-lru`、�
 ```
 xc-api    :8081  mem_limit 768m  -Xmx384m ZGC
 xc-admin  :8082  mem_limit 512m  -Xmx256m ZGC
-（复用）cost-cache-redis、cost-cloud-mysql
+（复用）共享 Redis 实例、共享 MySQL 实例
 ```
 
 Caddyfile 片段：
@@ -503,7 +505,7 @@ Flyway 版本规划：
 | 域名 `xc-api.xiachen.xyz` | 进行中 | DNS 已解析，Caddy 站点与证书待配 |
 | 域名 `img.xiachen.xyz` | 进行中 | COS 自定义域名待验证 + 证书 |
 | 公安联网备案 | 待办 | 网站上线 30 日内 |
-| COS 存储桶 | ✅ 已创建 | `xiachenchen-images-1513506595`（ap-guangzhou），公有读私有写；密钥走环境变量 |
+| COS 存储桶 | ✅ 已创建 | `COS_BUCKET`（实际桶名省略），公有读私有写；密钥走环境变量 |
 
 ---
 
@@ -565,7 +567,7 @@ Flyway 版本规划：
 | v0.5 | 2026-11-14 | M3 收口：预约看板与造型维护落地；跨店调货下线（V6 删除 `transfer_order`，小程序与后台入口一并移除）；接口与里程碑同步删减 |
 | v0.6 | 2026-11-14 | M4 收口：首页主题与模块编排、时间窗选主题、门店封面页；原「首页配置」页面与 `/api/admin/home` 下线合并；补健康检查/告警与提审材料；接口、可观测性与进度同步更新 |
 | v0.7 | 2026-11-14 | 门店合并为独立「门店」页，可改资料与封面；新增 ADMIN 门店新增与上下线（`POST /stores`、`PUT /stores/{id}/status`），下线不删，C 端列表/详情/首页门店卡/预约选店同步隐藏 |
-| v0.8 | 2026-11-14 | 图片存储接入腾讯云 COS（桶 `xiachenchen-images-1513506595`，域名 `img.xiachen.xyz`），上传改为后端写入；取消 `/uploads/policy` 规划 |
+| v0.8 | 2026-11-14 | 图片存储接入腾讯云 COS（桶名由 `COS_BUCKET` 配置，域名 `img.xiachen.xyz`），上传改为后端写入；取消 `/uploads/policy` 规划 |
 | v0.9 | 2026-11-14 | 移除本地磁盘回退与 `/uploads/**` 静态映射，上传只走 COS；演示数据图片迁至 COS（V7），删除 `static/seed` 本地素材 |
 | v0.10 | 2026-11-14 | COS 同一桶按环境分目录：本地 `dev/`、生产 `prod/`（`COS_KEY_PREFIX`） |
 | v0.11 | 2026-11-14 | 演示图片重新上传到 `dev/`（V8），数据引用从历史 `uploads/` 切换过来 |
